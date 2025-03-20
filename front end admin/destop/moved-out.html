@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ย้ายออกแล้ว - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+                <li><a href="register.html">ลงทะเบียน</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="move-out-section">
+        <h2>ย้ายออกแล้ว</h2>
+
+        <!-- ตารางแสดงข้อมูลห้องที่ย้ายออกแล้ว -->
+        <table id="movedOutTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ชื่อนามสกุลผู้ใช้</th>
+                    <th>เบอร์โทร</th>
+                    <th>วันที่ย้ายออก</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลจะถูกกรองและแสดงในที่นี้ -->
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        // ข้อมูลตัวอย่างการย้ายออกแล้ว
+        const movedOutList = [
+            { room: 'ห้อง 230', name: 'นายสมชาย ชัยรัตน์', phone: '0891234567', moveOutDate: '2025-03-15' },
+            { room: 'ห้อง 306', name: 'นางสาวสาอิ นามสม', phone: '0892345678', moveOutDate: '2025-03-10' },
+            { room: 'ห้อง 329', name: 'นายประยุทธ วงค์วิทย์', phone: '0893456789', moveOutDate: '2025-03-05' },
+            // เพิ่มข้อมูลได้ตามต้องการ
+        ];
+
+        // ฟังก์ชันเพื่อแสดงข้อมูลห้องที่ย้ายออกแล้ว
+        function displayMovedOutList() {
+            const tableBody = document.querySelector('#movedOutTable tbody');
+            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
+
+            // แสดงข้อมูลในตาราง
+            movedOutList.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.room}</td>
+                    <td>${item.name}</td>
+                    <td>${item.phone}</td>
+                    <td>${item.moveOutDate}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลเมื่อโหลดหน้า
+        displayMovedOutList();
+    </script>
+</body>
+</html>

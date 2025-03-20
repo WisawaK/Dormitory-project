@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลผู้เช่า - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn.delete {
+            background-color: #f44336;
+        }
+
+        .btn.edit {
+            background-color: #ffa500;
+        }
+
+        .btn.print {
+            background-color: #008CBA;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+                <li><a href="register.html">ลงทะเบียน</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="tenant-management">
+        <h2>จัดการข้อมูลผู้เช่า</h2>
+
+        <!-- ตารางแสดงข้อมูลผู้เช่า -->
+        <table id="tenantTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>เลขบัตรประชาชน</th>
+                    <th>ชื่อนามสกุล</th>
+                    <th>เบอร์โทร</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลผู้เช่าจะแสดงที่นี่ -->
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        // ข้อมูลตัวอย่างของผู้เช่า
+        const tenants = [
+            { room: 'ห้อง 300', idCard: '1234567890123', name: 'นายสมชาย ชัยรัตน์', phone: '0891234567' },
+            { room: 'ห้อง 301', idCard: '2345678901234', name: 'นางสาวสาอิ นามสม', phone: '0892345678' },
+            { room: 'ห้อง 302', idCard: '3456789012345', name: 'นายประยุทธ วงค์วิทย์', phone: '0893456789' },
+            { room: 'ห้อง 303', idCard: '3318789012345', name: 'นายประจักษ์ แซ่ลี้', phone: '08456789345' },
+            { room: 'ห้อง 304', idCard: '3456838392345', name: 'นายสมหมาย สมอ', phone: '0893423449' },
+            // เพิ่มข้อมูลผู้เช่าได้ตามต้องการ
+        ];
+
+        // ฟังก์ชันเพื่อแสดงข้อมูลผู้เช่า
+        function displayTenantList() {
+            const tableBody = document.querySelector('#tenantTable tbody');
+            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
+
+            tenants.forEach((tenant, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tenant.room}</td>
+                    <td>${tenant.idCard}</td>
+                    <td>${tenant.name}</td>
+                    <td>${tenant.phone}</td>
+                    <td>
+                        <button class="btn print" onclick="printTenant(${index})">พิมพ์ข้อมูล</button>
+                        <button class="btn edit" onclick="editTenant(${index})">แก้ไขข้อมูล</button>
+                        <button class="btn delete" onclick="deleteTenant(${index})">ลบข้อมูล</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // ฟังก์ชันพิมพ์ข้อมูลผู้เช่า
+        function printTenant(index) {
+            const tenant = tenants[index];
+            alert(`พิมพ์ข้อมูลผู้เช่า:\n\nห้อง: ${tenant.room}\nเลขบัตรประชาชน: ${tenant.idCard}\nชื่อนามสกุล: ${tenant.name}\nเบอร์โทร: ${tenant.phone}`);
+            // ที่นี่สามารถใช้ฟังก์ชันพิมพ์จริงหรือสร้างเอกสาร PDF ได้
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลผู้เช่า
+        function editTenant(index) {
+            const tenant = tenants[index];
+            const newName = prompt('กรุณากรอกชื่อนามสกุลใหม่:', tenant.name);
+            const newPhone = prompt('กรุณากรอกเบอร์โทรใหม่:', tenant.phone);
+            if (newName && newPhone) {
+                tenants[index].name = newName;
+                tenants[index].phone = newPhone;
+                displayTenantList(); // แสดงข้อมูลที่อัปเดต
+            }
+        }
+
+        // ฟังก์ชันลบข้อมูลผู้เช่า
+        function deleteTenant(index) {
+            const confirmDelete = confirm(`คุณต้องการลบข้อมูลของผู้เช่า ${tenants[index].name} หรือไม่?`);
+            if (confirmDelete) {
+                tenants.splice(index, 1); // ลบข้อมูลผู้เช่า
+                displayTenantList(); // แสดงข้อมูลหลังการลบ
+            }
+        }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลผู้เช่าเมื่อโหลดหน้า
+        displayTenantList();
+    </script>
+</body>
+</html>

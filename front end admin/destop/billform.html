@@ -40,7 +40,55 @@
             document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
             document.getElementById('totalAmount').value = totalAmount.toFixed(2);
         }
+
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
     </script>
+    <style>
+        /* เมนู */
+        .menu {
+            display: none; /* ซ่อนเมนูเริ่มต้น */
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 8px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -100,23 +148,26 @@
             </form>
         </div>
     </section>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
     <button onclick="toggleMenu()">เมนู</button>
 
-        <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
-        <div id="menu" class="menu">
-            <ul>
-                <li><a href="bill.html">ออกบิล</a></li>
-                <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
-                <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
-                <li><a href="move-out-pending.html">รอย้ายออก</a></li>
-                <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
-                <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
-                <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
-                <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
-                <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
-                <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
-                <li><a href="logout.html">ออกจากระบบ</a></li>
-            </ul>
-        </div>
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
 </body>
 </html>

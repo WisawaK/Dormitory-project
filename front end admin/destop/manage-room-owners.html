@@ -43,6 +43,35 @@
         .btn.add {
             background-color: #008CBA;
         }
+
+        /* สไตล์เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: #f1f1f1;
+            width: 200px;
+            border: 1px solid #ddd;
+        }
+
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .menu li {
+            padding: 8px;
+        }
+
+        .menu li a {
+            text-decoration: none;
+            color: #000;
+        }
+
+        .menu li a:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -157,7 +186,14 @@
 
         // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลแอดมินเมื่อโหลดหน้า
         displayAdminList();
+
+        // ฟังก์ชันเปิด/ปิดเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+        }
     </script>
+
     <button onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->

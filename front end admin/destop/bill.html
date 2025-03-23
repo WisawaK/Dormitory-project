@@ -6,75 +6,55 @@
     <title>ออกบิล - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <header>
-        <h1>หอพักนักศึกษา "WS"</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">หน้าหลัก</a></li>
-                <li><a href="login.html">เข้าสู่ระบบ</a></li>
-                <li><a href="register.html">ลงทะเบียน</a></li>
-            </ul>
-        </nav>
-    </header>
+    <style>
+        /* เมนู */
+        .menu {
+            display: none; /* ซ่อนเมนูเริ่มต้น */
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
 
-    <section class="bill-section">
-        <h2>ออกบิลห้องพัก</h2>
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
 
-        <!-- ตารางแสดงข้อมูลห้องพัก -->
-        <table border="1" width="100%">
-            <thead>
-                <tr>
-                    <th>ห้อง</th>
-                    <th>สถานะการชำระเงิน</th>
-                    <th>ดูรายละเอียด</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>ห้อง 300</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 301</td>
-                    <td>ยังไม่ชำระ</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 302</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 303</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 304</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <!-- เพิ่มข้อมูลห้องอื่น ๆ ได้ตามต้องการ -->
-            </tbody>
-        </table>
+        .menu ul li {
+            margin-bottom: 8px;
+        }
 
-        <!-- แผนภูมิวงกลมสถานะการชำระเงิน -->
-        <h3>แผนภูมิวงกลมสถานะการชำระเงิน</h3>
-        <canvas id="paymentStatusChart" width="400" height="400"></canvas>
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
 
-        <!-- กราฟรายได้ต่อเดือน -->
-        <h3>กราฟรายได้ต่อเดือน</h3>
-        <canvas id="monthlyRevenueChart" width="400" height="400"></canvas>
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
 
-        <!-- รายงานรายได้ต่อเดือน -->
-        <h3>รายงานรายได้</h3>
-        <p>รายได้รวมในเดือนมีนาคม: 45,000 บาท</p> <!-- ตัวอย่างรายได้ -->
-    </section>
-
+        /* ปุ่ม */
+        button {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
     <script>
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+
         window.onload = function() {
             var ctx1 = document.getElementById('paymentStatusChart').getContext('2d');
             var ctx2 = document.getElementById('monthlyRevenueChart').getContext('2d');
@@ -145,6 +125,74 @@
             });
         };
     </script>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+                <li><a href="register.html">ลงทะเบียน</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="bill-section">
+        <h2>ออกบิลห้องพัก</h2>
+
+        <!-- ตารางแสดงข้อมูลห้องพัก -->
+        <table border="1" width="100%">
+            <thead>
+                <tr>
+                    <th>ห้อง</th>
+                    <th>สถานะการชำระเงิน</th>
+                    <th>ดูรายละเอียด</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ห้อง 300</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 301</td>
+                    <td>ยังไม่ชำระ</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 302</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 303</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 304</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- แผนภูมิวงกลมสถานะการชำระเงิน -->
+        <h3>แผนภูมิวงกลมสถานะการชำระเงิน</h3>
+        <canvas id="paymentStatusChart" width="400" height="400"></canvas>
+
+        <!-- กราฟรายได้ต่อเดือน -->
+        <h3>กราฟรายได้ต่อเดือน</h3>
+        <canvas id="monthlyRevenueChart" width="400" height="400"></canvas>
+
+        <!-- รายงานรายได้ต่อเดือน -->
+        <h3>รายงานรายได้</h3>
+        <p>รายได้รวมในเดือนมีนาคม: 45,000 บาท</p> <!-- ตัวอย่างรายได้ -->
+    </section>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
     <button onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->

@@ -43,6 +43,35 @@
         .btn.print {
             background-color: #008CBA;
         }
+
+        /* สไตล์เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: #f1f1f1;
+            width: 200px;
+            border: 1px solid #ddd;
+        }
+
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .menu li {
+            padding: 8px;
+        }
+
+        .menu li a {
+            text-decoration: none;
+            color: #000;
+        }
+
+        .menu li a:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -84,7 +113,6 @@
             { room: 'ห้อง 302', idCard: '3456789012345', name: 'นายประยุทธ วงค์วิทย์', phone: '0893456789' },
             { room: 'ห้อง 303', idCard: '3318789012345', name: 'นายประจักษ์ แซ่ลี้', phone: '08456789345' },
             { room: 'ห้อง 304', idCard: '3456838392345', name: 'นายสมหมาย สมอ', phone: '0893423449' },
-            // เพิ่มข้อมูลผู้เช่าได้ตามต้องการ
         ];
 
         // ฟังก์ชันเพื่อแสดงข้อมูลผู้เช่า
@@ -113,7 +141,6 @@
         function printTenant(index) {
             const tenant = tenants[index];
             alert(`พิมพ์ข้อมูลผู้เช่า:\n\nห้อง: ${tenant.room}\nเลขบัตรประชาชน: ${tenant.idCard}\nชื่อนามสกุล: ${tenant.name}\nเบอร์โทร: ${tenant.phone}`);
-            // ที่นี่สามารถใช้ฟังก์ชันพิมพ์จริงหรือสร้างเอกสาร PDF ได้
         }
 
         // ฟังก์ชันแก้ไขข้อมูลผู้เช่า
@@ -139,7 +166,14 @@
 
         // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลผู้เช่าเมื่อโหลดหน้า
         displayTenantList();
+
+        // ฟังก์ชันเปิด/ปิดเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+        }
     </script>
+
     <button onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->

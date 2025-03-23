@@ -43,6 +43,37 @@
         .btn.add {
             background-color: #008CBA;
         }
+
+        /* เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 8px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
     </style>
 </head>
 <body>
@@ -83,7 +114,6 @@
             { id: 101, type: 'ห้องพัดลม', isRented: true },
             { id: 102, type: 'ห้องแอร์', isRented: false },
             { id: 103, type: 'ห้องพัดลม', isRented: true },
-            // เพิ่มห้องใหม่ตามต้องการ
         ];
 
         // ฟังก์ชันเพื่อแสดงข้อมูลห้องพัก
@@ -144,9 +174,17 @@
             }
         }
 
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+
         // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลห้องเมื่อโหลดหน้า
         displayRoomList();
     </script>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
     <button onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->

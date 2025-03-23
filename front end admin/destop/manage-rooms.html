@@ -52,7 +52,6 @@
             <ul>
                 <li><a href="index.html">หน้าหลัก</a></li>
                 <li><a href="login.html">เข้าสู่ระบบ</a></li>
-                <li><a href="register.html">ลงทะเบียน</a></li>
             </ul>
         </nav>
     </header>
@@ -148,5 +147,23 @@
         // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลห้องเมื่อโหลดหน้า
         displayRoomList();
     </script>
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
 </body>
 </html>

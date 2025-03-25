@@ -5,90 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการข้อมูลผู้เช่า - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* สไตล์สำหรับตาราง */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        /* ปุ่ม */
-        .btn {
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn.delete {
-            background-color: #f44336;
-        }
-
-        .btn.edit {
-            background-color: #ffa500;
-        }
-
-        .btn.print {
-            background-color: #008CBA;
-        }
-
-        /* สไตล์เมนู */
-        .menu {
-            display: none;
-            position: absolute;
-            top: 50px;
-            left: 0;
-            background-color: #f1f1f1;
-            width: 200px;
-            border: 1px solid #ddd;
-        }
-
-        .menu ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .menu li {
-            padding: 8px;
-        }
-
-        .menu li a {
-            text-decoration: none;
-            color: #000;
-        }
-
-        .menu li a:hover {
-            background-color: #ddd;
-        }
-    </style>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
 </head>
 <body>
     <header>
         <h1>หอพักนักศึกษา "WS"</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">หน้าหลัก</a></li>
-                <li><a href="login.html">เข้าสู่ระบบ</a></li>
-            </ul>
-        </nav>
     </header>
 
     <section class="tenant-management">
         <h2>จัดการข้อมูลผู้เช่า</h2>
-
-        <!-- ตารางแสดงข้อมูลผู้เช่า -->
         <table id="tenantTable">
             <thead>
                 <tr>
@@ -100,27 +26,40 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- ข้อมูลผู้เช่าจะแสดงที่นี่ -->
+                <!-- ข้อมูลจาก Firebase จะถูกแสดงที่นี่ -->
             </tbody>
         </table>
     </section>
 
-    <script>
-        // ข้อมูลตัวอย่างของผู้เช่า
-        const tenants = [
-            { room: 'ห้อง 300', idCard: '1234567890123', name: 'นายสมชาย ชัยรัตน์', phone: '0891234567' },
-            { room: 'ห้อง 301', idCard: '2345678901234', name: 'นางสาวสาอิ นามสม', phone: '0892345678' },
-            { room: 'ห้อง 302', idCard: '3456789012345', name: 'นายประยุทธ วงค์วิทย์', phone: '0893456789' },
-            { room: 'ห้อง 303', idCard: '3318789012345', name: 'นายประจักษ์ แซ่ลี้', phone: '08456789345' },
-            { room: 'ห้อง 304', idCard: '3456838392345', name: 'นายสมหมาย สมอ', phone: '0893423449' },
-        ];
+    <script type="module">
+        // Import Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
-        // ฟังก์ชันเพื่อแสดงข้อมูลผู้เช่า
-        function displayTenantList() {
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const tenantCollection = collection(db, "tenants");
+
+        async function fetchTenants() {
+            const snapshot = await getDocs(tenantCollection);
             const tableBody = document.querySelector('#tenantTable tbody');
-            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
-
-            tenants.forEach((tenant, index) => {
+            tableBody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const tenant = doc.data();
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${tenant.room}</td>
@@ -128,69 +67,21 @@
                     <td>${tenant.name}</td>
                     <td>${tenant.phone}</td>
                     <td>
-                        <button class="btn print" onclick="printTenant(${index})">พิมพ์ข้อมูล</button>
-                        <button class="btn edit" onclick="editTenant(${index})">แก้ไขข้อมูล</button>
-                        <button class="btn delete" onclick="deleteTenant(${index})">ลบข้อมูล</button>
+                        <button class="btn delete" onclick="deleteTenant('${doc.id}')">ลบข้อมูล</button>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
-        // ฟังก์ชันพิมพ์ข้อมูลผู้เช่า
-        function printTenant(index) {
-            const tenant = tenants[index];
-            alert(`พิมพ์ข้อมูลผู้เช่า:\n\nห้อง: ${tenant.room}\nเลขบัตรประชาชน: ${tenant.idCard}\nชื่อนามสกุล: ${tenant.name}\nเบอร์โทร: ${tenant.phone}`);
-        }
-
-        // ฟังก์ชันแก้ไขข้อมูลผู้เช่า
-        function editTenant(index) {
-            const tenant = tenants[index];
-            const newName = prompt('กรุณากรอกชื่อนามสกุลใหม่:', tenant.name);
-            const newPhone = prompt('กรุณากรอกเบอร์โทรใหม่:', tenant.phone);
-            if (newName && newPhone) {
-                tenants[index].name = newName;
-                tenants[index].phone = newPhone;
-                displayTenantList(); // แสดงข้อมูลที่อัปเดต
+        async function deleteTenant(id) {
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                await deleteDoc(doc(db, "tenants", id));
+                fetchTenants();
             }
         }
 
-        // ฟังก์ชันลบข้อมูลผู้เช่า
-        function deleteTenant(index) {
-            const confirmDelete = confirm(`คุณต้องการลบข้อมูลของผู้เช่า ${tenants[index].name} หรือไม่?`);
-            if (confirmDelete) {
-                tenants.splice(index, 1); // ลบข้อมูลผู้เช่า
-                displayTenantList(); // แสดงข้อมูลหลังการลบ
-            }
-        }
-
-        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลผู้เช่าเมื่อโหลดหน้า
-        displayTenantList();
-
-        // ฟังก์ชันเปิด/ปิดเมนู
-        function toggleMenu() {
-            const menu = document.getElementById('menu');
-            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-        }
+        fetchTenants();
     </script>
-
-    <button onclick="toggleMenu()">เมนู</button>
-
-    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
-    <div id="menu" class="menu">
-        <ul>
-            <li><a href="bill.html">ออกบิล</a></li>
-            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
-            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
-            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
-            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
-            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
-            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
-            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
-            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
-            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
-            <li><a href="logout.html">ออกจากระบบ</a></li>
-        </ul>
-    </div>
 </body>
 </html>

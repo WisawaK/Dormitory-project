@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการข้อมูลผู้เช่า - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
     <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
 </head>
@@ -15,6 +16,18 @@
 
     <section class="tenant-management">
         <h2>จัดการข้อมูลผู้เช่า</h2>
+
+        <!-- แบบฟอร์มเพิ่ม/แก้ไขข้อมูล -->
+        <form id="tenantForm">
+            <input type="hidden" id="tenantId">
+            <input type="text" id="room" placeholder="เลขห้อง" required>
+            <input type="text" id="idCard" placeholder="เลขบัตรประชาชน" required>
+            <input type="text" id="name" placeholder="ชื่อนามสกุล" required>
+            <input type="text" id="phone" placeholder="เบอร์โทร" required>
+            <button type="submit">เพิ่ม/แก้ไข ผู้เช่า</button>
+        </form>
+
+        <!-- ตารางแสดงข้อมูลผู้เช่า -->
         <table id="tenantTable">
             <thead>
                 <tr>
@@ -33,8 +46,18 @@
 
     <script type="module">
         // Import Firebase SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { 
+          initializeApp 
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { 
+          getFirestore, 
+          collection, 
+          addDoc, 
+          deleteDoc, 
+          doc, 
+          updateDoc,
+          onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
         // Firebase Configuration
@@ -54,33 +77,90 @@
         const db = getFirestore(app);
         const tenantCollection = collection(db, "tenants");
 
-        async function fetchTenants() {
-            const snapshot = await getDocs(tenantCollection);
-            const tableBody = document.querySelector('#tenantTable tbody');
-            tableBody.innerHTML = '';
-            snapshot.forEach(doc => {
-                const tenant = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${tenant.room}</td>
-                    <td>${tenant.idCard}</td>
-                    <td>${tenant.name}</td>
-                    <td>${tenant.phone}</td>
-                    <td>
-                        <button class="btn delete" onclick="deleteTenant('${doc.id}')">ลบข้อมูล</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
+        // ฟังก์ชันแสดงข้อมูลผู้เช่า (Real-time ด้วย onSnapshot)
+        function fetchTenants() {
+            onSnapshot(tenantCollection, (snapshot) => {
+                const tableBody = document.querySelector('#tenantTable tbody');
+                tableBody.innerHTML = '';
+
+                snapshot.forEach((docSnap) => {
+                    const tenant = docSnap.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${tenant.room}</td>
+                        <td>${tenant.idCard}</td>
+                        <td>${tenant.name}</td>
+                        <td>${tenant.phone}</td>
+                        <td>
+                            <button class="btn edit" 
+                                onclick="editTenant('${docSnap.id}', '${tenant.room}', '${tenant.idCard}', '${tenant.name}', '${tenant.phone}')">
+                                แก้ไข
+                            </button>
+                            <button class="btn delete" 
+                                onclick="deleteTenant('${docSnap.id}')">
+                                ลบข้อมูล
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
             });
         }
 
-        async function deleteTenant(id) {
+        // เพิ่มหรือแก้ไขข้อมูลผู้เช่า
+        document.getElementById("tenantForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const tenantId = document.getElementById("tenantId").value;
+            const room = document.getElementById("room").value;
+            const idCard = document.getElementById("idCard").value;
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+
+            if (tenantId) {
+                // แก้ไขข้อมูล
+                const tenantRef = doc(db, "tenants", tenantId);
+                await updateDoc(tenantRef, { room, idCard, name, phone });
+                alert("แก้ไขข้อมูลสำเร็จ!");
+            } else {
+                // เพิ่มข้อมูลใหม่
+                await addDoc(tenantCollection, { room, idCard, name, phone });
+                alert("เพิ่มข้อมูลผู้เช่าสำเร็จ!");
+            }
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById("tenantForm").reset();
+            document.getElementById("tenantId").value = "";
+        });
+
+        // ฟังก์ชันลบข้อมูลผู้เช่า (ผูกกับ window เพื่อตัวปุ่มบน HTML เรียกใช้ได้)
+        window.deleteTenant = async function (id) {
+            if (!id) {
+                console.error("Tenant ID is missing!");
+                return;
+            }
+
             if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
-                await deleteDoc(doc(db, "tenants", id));
-                fetchTenants();
+                try {
+                    await deleteDoc(doc(db, "tenants", id));
+                    alert("ลบข้อมูลสำเร็จ!");
+                    // ไม่ต้องเรียก fetchTenants() เพราะ onSnapshot จะอัปเดตให้อัตโนมัติ
+                } catch (error) {
+                    console.error("Error deleting tenant:", error);
+                }
             }
         }
 
+        // ฟังก์ชันแก้ไขข้อมูล
+        window.editTenant = function(id, room, idCard, name, phone) {
+            document.getElementById("tenantId").value = id;
+            document.getElementById("room").value = room;
+            document.getElementById("idCard").value = idCard;
+            document.getElementById("name").value = name;
+            document.getElementById("phone").value = phone;
+        };
+
+        // โหลดข้อมูลครั้งแรก (onSnapshot จะทำงานตลอด)
         fetchTenants();
     </script>
 </body>

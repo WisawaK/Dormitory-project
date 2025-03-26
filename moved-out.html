@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายการชำระเงินแล้ว - หอพักนักศึกษา WS</title>
+    <title>ย้ายออกแล้ว - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* สไตล์สำหรับตาราง */
@@ -13,13 +13,13 @@
         }
 
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid #d63384;
             padding: 8px;
             text-align: center;
         }
 
         th {
-            background-color: #f4f4f4;
+            background-color: #d63384;
         }
 
         /* เมนู */
@@ -75,19 +75,17 @@
         </nav>
     </header>
 
-    <section class="payment-section">
-        <h2>รายการชำระเงินแล้ว</h2>
+    <section class="move-out-section">
+        <h2>ย้ายออกแล้ว</h2>
 
-        <!-- ตารางแสดงข้อมูลการชำระเงินแล้ว -->
-        <table id="paymentTable">
+        <!-- ตารางแสดงข้อมูลห้องที่ย้ายออกแล้ว -->
+        <table id="movedOutTable">
             <thead>
                 <tr>
-                    <th>เลขบิล</th>
-                    <th>ห้อง</th>
-                    <th>ผู้เช่า</th>
-                    <th>รอบบิล</th>
-                    <th>ค่าเช่า</th>
-                    <th>ยอดรวม</th>
+                    <th>เลขห้อง</th>
+                    <th>ชื่อนามสกุลผู้ใช้</th>
+                    <th>เบอร์โทร</th>
+                    <th>วันที่ย้ายออก</th>
                 </tr>
             </thead>
             <tbody>
@@ -97,41 +95,34 @@
     </section>
 
     <script>
-        // ข้อมูลตัวอย่างการชำระเงิน
-        const payments = [
-            { billNo: 'INV001', room: 'ห้อง 300', tenant: 'นายสมชาย', period: 'มกราคม 2025', rent: 3000, total: 3000, paid: true },
-            { billNo: 'INV002', room: 'ห้อง 301', tenant: 'นางสาวสาอิ', period: 'กุมภาพันธ์ 2025', rent: 3500, total: 3500, paid: false },
-            { billNo: 'INV003', room: 'ห้อง 302', tenant: 'นายประจักษ์', period: 'มีนาคม 2025', rent: 3200, total: 3500, paid: true },
-            { billNo: 'INV003', room: 'ห้อง 302', tenant: 'นายสมหมาย', period: 'กุมภาพันธ์ 2025', rent: 3600, total: 3200, paid: true },
-        
+        // ข้อมูลตัวอย่างการย้ายออกแล้ว
+        const movedOutList = [
+            { room: 'ห้อง 230', name: 'นายสมพงษ์ ทองคำ', phone: '0891234567', moveOutDate: '2025-03-15' },
+            { room: 'ห้อง 306', name: 'นางสาวเวียโอเล็ต ', phone: '0892345678', moveOutDate: '2025-03-10' },
+            { room: 'ห้อง 329', name: 'นายประคำ ประปา', phone: '0893456789', moveOutDate: '2025-03-05' },
             // เพิ่มข้อมูลได้ตามต้องการ
         ];
 
-        // ฟังก์ชันเพื่อกรองข้อมูลและแสดงเฉพาะผู้ที่ชำระเงินแล้ว
-        function displayPaidPayments() {
-            const tableBody = document.querySelector('#paymentTable tbody');
+        // ฟังก์ชันเพื่อแสดงข้อมูลห้องที่ย้ายออกแล้ว
+        function displayMovedOutList() {
+            const tableBody = document.querySelector('#movedOutTable tbody');
             tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
 
-            // กรองเฉพาะผู้ที่ชำระเงินแล้ว
-            const paidPayments = payments.filter(payment => payment.paid);
-
             // แสดงข้อมูลในตาราง
-            paidPayments.forEach(payment => {
+            movedOutList.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${payment.billNo}</td>
-                    <td>${payment.room}</td>
-                    <td>${payment.tenant}</td>
-                    <td>${payment.period}</td>
-                    <td>${payment.rent} บาท</td>
-                    <td>${payment.total} บาท</td>
+                    <td>${item.room}</td>
+                    <td>${item.name}</td>
+                    <td>${item.phone}</td>
+                    <td>${item.moveOutDate}</td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
         // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลเมื่อโหลดหน้า
-        displayPaidPayments();
+        displayMovedOutList();
 
         // ฟังก์ชันแสดง/ซ่อนเมนู
         function toggleMenu() {
@@ -139,7 +130,7 @@
             menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
         }
     </script>
-
+   
     <!-- ปุ่มสำหรับเปิดเมนู -->
     <button onclick="toggleMenu()">เมนู</button>
 

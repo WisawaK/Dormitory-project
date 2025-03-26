@@ -13,13 +13,13 @@
         }
 
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid #d63384;
             padding: 8px;
             text-align: center;
         }
 
         th {
-            background-color: #f4f4f4;
+            background-color: #d63384;
         }
 
         /* ปุ่ม */
@@ -43,6 +43,44 @@
         .btn.add {
             background-color: #008CBA;
         }
+
+        /* สไตล์เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: #f1f1f1;
+            width: 200px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu ul li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .menu ul li:last-child {
+            border-bottom: none;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+        }
+
+        .menu ul li a:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +92,6 @@
                 <li><a href="login.html">เข้าสู่ระบบ</a></li>
             </ul>
         </nav>
-       
     </header>
 
     <section class="rate-management">
@@ -77,71 +114,7 @@
         <button class="btn add" onclick="addRate()">เพิ่มเรท</button>
     </section>
 
-    <script>
-        // ข้อมูลตัวอย่างเรทค่าน้ำค่าไฟ
-        const rates = [
-            { type: 'ค่าน้ำ', price: 15 },   // ตัวอย่างค่าน้ำ
-            { type: 'ค่าไฟ', price: 5 }     // ตัวอย่างค่าไฟ
-        ];
-
-        // ฟังก์ชันเพื่อแสดงข้อมูลเรทค่าน้ำค่าไฟ
-        function displayRateList() {
-            const tableBody = document.querySelector('#rateTable tbody');
-            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
-
-            rates.forEach((rate, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${rate.type}</td>
-                    <td>${rate.price} บาท</td>
-                    <td>
-                        <button class="btn edit" onclick="editRate(${index})">แก้ไข</button>
-                        <button class="btn delete" onclick="deleteRate(${index})">ลบ</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // ฟังก์ชันเพิ่มเรทใหม่
-        function addRate() {
-            const type = prompt('กรุณากรอกประเภท (ค่าน้ำ/ค่าไฟ):');
-            const price = prompt('กรุณากรอกราคาค่าบริการ (บาท):');
-
-            if (type && price) {
-                const newRate = {
-                    type: type,
-                    price: parseFloat(price)
-                };
-                rates.push(newRate);
-                displayRateList(); // แสดงข้อมูลหลังการเพิ่ม
-            }
-        }
-
-        // ฟังก์ชันแก้ไขข้อมูลเรท
-        function editRate(index) {
-            const rate = rates[index];
-            const newPrice = prompt('กรุณากรอกราคาใหม่:', rate.price);
-
-            if (newPrice) {
-                rates[index].price = parseFloat(newPrice);
-                displayRateList(); // แสดงข้อมูลที่อัปเดต
-            }
-        }
-
-        // ฟังก์ชันลบข้อมูลเรท
-        function deleteRate(index) {
-            const confirmDelete = confirm(`คุณต้องการลบข้อมูลเรท ${rates[index].type} หรือไม่?`);
-            if (confirmDelete) {
-                rates.splice(index, 1); // ลบข้อมูล
-                displayRateList(); // แสดงข้อมูลหลังการลบ
-            }
-        }
-
-        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลเรทเมื่อโหลดหน้า
-        displayRateList();
-    </script>
-    <button onclick="toggleMenu()">เมนู</button>
+    <button class="btn" onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
     <div id="menu" class="menu">
@@ -159,5 +132,65 @@
             <li><a href="logout.html">ออกจากระบบ</a></li>
         </ul>
     </div>
+
+    <script>
+        // ข้อมูลตัวอย่างเรทค่าน้ำค่าไฟ
+        const rates = [
+            { type: 'ค่าน้ำ', price: 15 },
+            { type: 'ค่าไฟ', price: 5 }
+        ];
+
+        function displayRateList() {
+            const tableBody = document.querySelector('#rateTable tbody');
+            tableBody.innerHTML = '';
+
+            rates.forEach((rate, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rate.type}</td>
+                    <td>${rate.price} บาท</td>
+                    <td>
+                        <button class="btn edit" onclick="editRate(${index})">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteRate(${index})">ลบ</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function addRate() {
+            const type = prompt('กรุณากรอกประเภท (ค่าน้ำ/ค่าไฟ):');
+            const price = prompt('กรุณากรอกราคาค่าบริการ (บาท):');
+
+            if (type && price) {
+                rates.push({ type, price: parseFloat(price) });
+                displayRateList();
+            }
+        }
+
+        function editRate(index) {
+            const newPrice = prompt('กรุณากรอกราคาใหม่:', rates[index].price);
+            if (newPrice) {
+                rates[index].price = parseFloat(newPrice);
+                displayRateList();
+            }
+        }
+
+        function deleteRate(index) {
+            if (confirm(`คุณต้องการลบข้อมูลเรท ${rates[index].type} หรือไม่?`)) {
+                rates.splice(index, 1);
+                displayRateList();
+            }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        // แสดงข้อมูลเริ่มต้น
+        displayRateList();
+    </script>
 </body>
 </html>
+

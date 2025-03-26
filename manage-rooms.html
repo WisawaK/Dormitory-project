@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการข้อมูลและประเภทห้องพัก - หอพักนักศึกษา WS</title>
+    <title>จัดการห้องพัก - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* สไตล์สำหรับตาราง */
@@ -13,13 +13,13 @@
         }
 
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid #d63384;
             padding: 8px;
             text-align: center;
         }
 
         th {
-            background-color: #f4f4f4;
+            background-color: #d63384;
         }
 
         /* ปุ่ม */
@@ -44,39 +44,35 @@
             background-color: #008CBA;
         }
 
-        .room-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-        }
-
-        /* สไตล์เมนู */
+        /* เมนู */
         .menu {
             display: none;
             position: absolute;
             top: 50px;
-            left: 0;
-            background-color: #f1f1f1;
-            width: 200px;
+            right: 20px;
+            background-color: #fff;
             border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
         }
 
         .menu ul {
-            list-style-type: none;
+            list-style: none;
             padding: 0;
         }
 
-        .menu li {
-            padding: 8px;
+        .menu ul li {
+            margin-bottom: 8px;
         }
 
-        .menu li a {
+        .menu ul li a {
             text-decoration: none;
-            color: #000;
+            color: #333;
         }
 
-        .menu li a:hover {
-            background-color: #ddd;
+        .menu ul li a:hover {
+            color: #007BFF;
         }
     </style>
 </head>
@@ -92,17 +88,15 @@
     </header>
 
     <section class="room-management">
-        <h2>จัดการข้อมูลและประเภทห้องพัก</h2>
+        <h2>จัดการห้องพัก</h2>
 
         <!-- ตารางแสดงข้อมูลห้องพัก -->
         <table id="roomTable">
             <thead>
                 <tr>
-                    <th>ไอดี</th>
-                    <th>รูปภาพ</th>
+                    <th>เลขห้อง</th>
                     <th>ประเภทห้อง</th>
-                    <th>ราคาค่าเช่าต่อเดือน</th>
-                    <th>ค่ามัดจำ</th>
+                    <th>สถานะการเช่า</th>
                     <th>จัดการ</th>
                 </tr>
             </thead>
@@ -115,11 +109,11 @@
     </section>
 
     <script>
-        // ข้อมูลตัวอย่างห้องพัก
+        // ข้อมูลห้องพักตัวอย่าง
         const rooms = [
-            { id: 1, image: 'room1.png', type: 'ห้องพัดลม', rent: 3000, deposit: 1000 },
-            { id: 2, image: 'room2.jpg', type: 'ห้องแอร์', rent: 4500, deposit: 1500 },
-            // เพิ่มห้องใหม่ตามต้องการ
+            { id: 101, type: 'ห้องพัดลม', isRented: true },
+            { id: 102, type: 'ห้องแอร์', isRented: false },
+            { id: 302, type: 'ห้องพัดลม', isRented: true },
         ];
 
         // ฟังก์ชันเพื่อแสดงข้อมูลห้องพัก
@@ -131,10 +125,8 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${room.id}</td>
-                    <td><img src="${room.image}" alt="รูปภาพห้อง" class="room-image"></td>
                     <td>${room.type}</td>
-                    <td>${room.rent} บาท</td>
-                    <td>${room.deposit} บาท</td>
+                    <td>${room.isRented ? 'มีผู้เช่า' : 'ยังไม่มีผู้เช่า'}</td>
                     <td>
                         <button class="btn edit" onclick="editRoom(${index})">แก้ไขข้อมูล</button>
                         <button class="btn delete" onclick="deleteRoom(${index})">ลบข้อมูล</button>
@@ -147,17 +139,13 @@
         // ฟังก์ชันเพิ่มห้องใหม่
         function addRoom() {
             const type = prompt('กรุณากรอกประเภทห้อง (ห้องพัดลมหรือห้องแอร์):');
-            const rent = prompt('กรุณากรอกราคาค่าเช่าต่อเดือน (บาท):');
-            const deposit = prompt('กรุณากรอกค่ามัดจำ (บาท):');
-            const image = prompt('กรุณากรอกลิงก์รูปภาพของห้อง (URL):');
-            
-            if (type && rent && deposit && image) {
+            const isRented = confirm('ห้องนี้มีผู้เช่าหรือยัง? กด "OK" หากมีผู้เช่า, "Cancel" หากยังไม่มีผู้เช่า.');
+
+            if (type) {
                 const newRoom = {
-                    id: rooms.length + 1,
-                    image: image,
+                    id: rooms.length + 101, // เพิ่มเลขห้องใหม่ (เริ่มจาก 101)
                     type: type,
-                    rent: parseInt(rent),
-                    deposit: parseInt(deposit)
+                    isRented: isRented
                 };
                 rooms.push(newRoom);
                 displayRoomList(); // แสดงข้อมูลหลังการเพิ่ม
@@ -168,38 +156,35 @@
         function editRoom(index) {
             const room = rooms[index];
             const newType = prompt('กรุณากรอกประเภทห้องใหม่:', room.type);
-            const newRent = prompt('กรุณากรอกราคาค่าเช่าต่อเดือนใหม่ (บาท):', room.rent);
-            const newDeposit = prompt('กรุณากรอกค่ามัดจำใหม่ (บาท):', room.deposit);
-            const newImage = prompt('กรุณากรอกลิงก์รูปภาพใหม่ (URL):', room.image);
+            const newIsRented = confirm('ห้องนี้มีผู้เช่าหรือยัง? กด "OK" หากมีผู้เช่า, "Cancel" หากยังไม่มีผู้เช่า.');
 
-            if (newType && newRent && newDeposit && newImage) {
+            if (newType) {
                 rooms[index].type = newType;
-                rooms[index].rent = parseInt(newRent);
-                rooms[index].deposit = parseInt(newDeposit);
-                rooms[index].image = newImage;
+                rooms[index].isRented = newIsRented;
                 displayRoomList(); // แสดงข้อมูลที่อัปเดต
             }
         }
 
         // ฟังก์ชันลบห้อง
         function deleteRoom(index) {
-            const confirmDelete = confirm(`คุณต้องการลบข้อมูลห้อง ID ${rooms[index].id} หรือไม่?`);
+            const confirmDelete = confirm(`คุณต้องการลบข้อมูลห้อง ${rooms[index].id} หรือไม่?`);
             if (confirmDelete) {
                 rooms.splice(index, 1); // ลบข้อมูลห้อง
                 displayRoomList(); // แสดงข้อมูลหลังการลบ
             }
         }
 
-        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลห้องเมื่อโหลดหน้า
-        displayRoomList();
-
-        // ฟังก์ชันเปิด/ปิดเมนู
+        // ฟังก์ชันแสดง/ซ่อนเมนู
         function toggleMenu() {
             const menu = document.getElementById('menu');
-            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
         }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลห้องเมื่อโหลดหน้า
+        displayRoomList();
     </script>
 
+    <!-- ปุ่มสำหรับเปิดเมนู -->
     <button onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->

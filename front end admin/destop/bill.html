@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ออกบิล - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* เมนู */
+        .menu {
+            display: none; /* ซ่อนเมนูเริ่มต้น */
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 8px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
+
+        /* ปุ่ม */
+        button {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+    <script>
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+
+        window.onload = function() {
+            var ctx1 = document.getElementById('paymentStatusChart').getContext('2d');
+            var ctx2 = document.getElementById('monthlyRevenueChart').getContext('2d');
+
+            // แผนภูมิวงกลมแสดงสถานะการชำระเงิน
+            var paymentStatusChart = new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: ['ชำระแล้ว', 'ยังไม่ชำระ'],
+                    datasets: [{
+                        label: 'สถานะการชำระเงิน',
+                        data: [6, 4],  // ตัวอย่าง: 6 ห้องชำระแล้ว, 4 ห้องยังไม่ชำระ
+                        backgroundColor: ['#4CAF50', '#FF6347'],
+                        borderColor: ['#ffffff', '#ffffff'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.label + ': ' + tooltipItem.raw + ' ห้อง';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // กราฟรายได้ต่อเดือน
+            var monthlyRevenueChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน'],
+                    datasets: [{
+                        label: 'รายได้ต่อเดือน',
+                        data: [40000, 35000, 45000, 40000, 42000, 46000],  // ตัวอย่างรายได้ในแต่ละเดือน
+                        backgroundColor: '#4CAF50',
+                        borderColor: '#388E3C',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.raw + ' บาท';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+                <li><a href="register.html">ลงทะเบียน</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="bill-section">
+        <h2>ออกบิลห้องพัก</h2>
+
+        <!-- ตารางแสดงข้อมูลห้องพัก -->
+        <table border="1" width="100%">
+            <thead>
+                <tr>
+                    <th>ห้อง</th>
+                    <th>สถานะการชำระเงิน</th>
+                    <th>ดูรายละเอียด</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ห้อง 300</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 301</td>
+                    <td>ยังไม่ชำระ</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 302</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 303</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+                <tr>
+                    <td>ห้อง 304</td>
+                    <td>ชำระแล้ว</td>
+                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- แผนภูมิวงกลมสถานะการชำระเงิน -->
+        <h3>แผนภูมิวงกลมสถานะการชำระเงิน</h3>
+        <canvas id="paymentStatusChart" width="400" height="400"></canvas>
+
+        <!-- กราฟรายได้ต่อเดือน -->
+        <h3>กราฟรายได้ต่อเดือน</h3>
+        <canvas id="monthlyRevenueChart" width="400" height="400"></canvas>
+
+        <!-- รายงานรายได้ต่อเดือน -->
+        <h3>รายงานรายได้</h3>
+        <p>รายได้รวมในเดือนมีนาคม: 45,000 บาท</p> <!-- ตัวอย่างรายได้ -->
+    </section>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการห้องพัก - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn.delete {
+            background-color: #f44336;
+        }
+
+        .btn.edit {
+            background-color: #ffa500;
+        }
+
+        .btn.add {
+            background-color: #008CBA;
+        }
+
+        /* เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 8px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="room-management">
+        <h2>จัดการห้องพัก</h2>
+
+        <!-- ตารางแสดงข้อมูลห้องพัก -->
+        <table id="roomTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ประเภทห้อง</th>
+                    <th>สถานะการเช่า</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลห้องพักจะแสดงที่นี่ -->
+            </tbody>
+        </table>
+
+        <button class="btn add" onclick="addRoom()">เพิ่มห้องใหม่</button>
+    </section>
+
+    <script>
+        // ข้อมูลห้องพักตัวอย่าง
+        const rooms = [
+            { id: 101, type: 'ห้องพัดลม', isRented: true },
+            { id: 102, type: 'ห้องแอร์', isRented: false },
+            { id: 103, type: 'ห้องพัดลม', isRented: true },
+        ];
+
+        // ฟังก์ชันเพื่อแสดงข้อมูลห้องพัก
+        function displayRoomList() {
+            const tableBody = document.querySelector('#roomTable tbody');
+            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
+
+            rooms.forEach((room, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${room.id}</td>
+                    <td>${room.type}</td>
+                    <td>${room.isRented ? 'มีผู้เช่า' : 'ยังไม่มีผู้เช่า'}</td>
+                    <td>
+                        <button class="btn edit" onclick="editRoom(${index})">แก้ไขข้อมูล</button>
+                        <button class="btn delete" onclick="deleteRoom(${index})">ลบข้อมูล</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // ฟังก์ชันเพิ่มห้องใหม่
+        function addRoom() {
+            const type = prompt('กรุณากรอกประเภทห้อง (ห้องพัดลมหรือห้องแอร์):');
+            const isRented = confirm('ห้องนี้มีผู้เช่าหรือยัง? กด "OK" หากมีผู้เช่า, "Cancel" หากยังไม่มีผู้เช่า.');
+
+            if (type) {
+                const newRoom = {
+                    id: rooms.length + 101, // เพิ่มเลขห้องใหม่ (เริ่มจาก 101)
+                    type: type,
+                    isRented: isRented
+                };
+                rooms.push(newRoom);
+                displayRoomList(); // แสดงข้อมูลหลังการเพิ่ม
+            }
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลห้อง
+        function editRoom(index) {
+            const room = rooms[index];
+            const newType = prompt('กรุณากรอกประเภทห้องใหม่:', room.type);
+            const newIsRented = confirm('ห้องนี้มีผู้เช่าหรือยัง? กด "OK" หากมีผู้เช่า, "Cancel" หากยังไม่มีผู้เช่า.');
+
+            if (newType) {
+                rooms[index].type = newType;
+                rooms[index].isRented = newIsRented;
+                displayRoomList(); // แสดงข้อมูลที่อัปเดต
+            }
+        }
+
+        // ฟังก์ชันลบห้อง
+        function deleteRoom(index) {
+            const confirmDelete = confirm(`คุณต้องการลบข้อมูลห้อง ${rooms[index].id} หรือไม่?`);
+            if (confirmDelete) {
+                rooms.splice(index, 1); // ลบข้อมูลห้อง
+                displayRoomList(); // แสดงข้อมูลหลังการลบ
+            }
+        }
+
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลห้องเมื่อโหลดหน้า
+        displayRoomList();
+    </script>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</body>
+</html>

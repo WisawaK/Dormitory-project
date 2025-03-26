@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการเรทค่าน้ำค่าไฟ - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn.delete {
+            background-color: #f44336;
+        }
+
+        .btn.edit {
+            background-color: #ffa500;
+        }
+
+        .btn.add {
+            background-color: #008CBA;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+            </ul>
+        </nav>
+       
+    </header>
+
+    <section class="rate-management">
+        <h2>จัดการเรทค่าน้ำค่าไฟ</h2>
+
+        <!-- ตารางแสดงข้อมูลเรทค่าน้ำค่าไฟ -->
+        <table id="rateTable">
+            <thead>
+                <tr>
+                    <th>ประเภท</th>
+                    <th>ราคา</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลเรทค่าน้ำค่าไฟจะแสดงที่นี่ -->
+            </tbody>
+        </table>
+
+        <button class="btn add" onclick="addRate()">เพิ่มเรท</button>
+    </section>
+
+    <script>
+        // ข้อมูลตัวอย่างเรทค่าน้ำค่าไฟ
+        const rates = [
+            { type: 'ค่าน้ำ', price: 15 },   // ตัวอย่างค่าน้ำ
+            { type: 'ค่าไฟ', price: 5 }     // ตัวอย่างค่าไฟ
+        ];
+
+        // ฟังก์ชันเพื่อแสดงข้อมูลเรทค่าน้ำค่าไฟ
+        function displayRateList() {
+            const tableBody = document.querySelector('#rateTable tbody');
+            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
+
+            rates.forEach((rate, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rate.type}</td>
+                    <td>${rate.price} บาท</td>
+                    <td>
+                        <button class="btn edit" onclick="editRate(${index})">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteRate(${index})">ลบ</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // ฟังก์ชันเพิ่มเรทใหม่
+        function addRate() {
+            const type = prompt('กรุณากรอกประเภท (ค่าน้ำ/ค่าไฟ):');
+            const price = prompt('กรุณากรอกราคาค่าบริการ (บาท):');
+
+            if (type && price) {
+                const newRate = {
+                    type: type,
+                    price: parseFloat(price)
+                };
+                rates.push(newRate);
+                displayRateList(); // แสดงข้อมูลหลังการเพิ่ม
+            }
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลเรท
+        function editRate(index) {
+            const rate = rates[index];
+            const newPrice = prompt('กรุณากรอกราคาใหม่:', rate.price);
+
+            if (newPrice) {
+                rates[index].price = parseFloat(newPrice);
+                displayRateList(); // แสดงข้อมูลที่อัปเดต
+            }
+        }
+
+        // ฟังก์ชันลบข้อมูลเรท
+        function deleteRate(index) {
+            const confirmDelete = confirm(`คุณต้องการลบข้อมูลเรท ${rates[index].type} หรือไม่?`);
+            if (confirmDelete) {
+                rates.splice(index, 1); // ลบข้อมูล
+                displayRateList(); // แสดงข้อมูลหลังการลบ
+            }
+        }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลเรทเมื่อโหลดหน้า
+        displayRateList();
+    </script>
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</body>
+</html>

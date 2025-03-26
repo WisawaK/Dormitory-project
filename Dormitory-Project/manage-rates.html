@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการเรทค่าน้ำค่าไฟ - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #d63384;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #d63384;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn.delete {
+            background-color: #f44336;
+        }
+
+        .btn.edit {
+            background-color: #ffa500;
+        }
+
+        .btn.add {
+            background-color: #008CBA;
+        }
+
+        /* สไตล์เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: #f1f1f1;
+            width: 200px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu ul li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .menu ul li:last-child {
+            border-bottom: none;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+        }
+
+        .menu ul li a:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="rate-management">
+        <h2>จัดการเรทค่าน้ำค่าไฟ</h2>
+
+        <!-- ตารางแสดงข้อมูลเรทค่าน้ำค่าไฟ -->
+        <table id="rateTable">
+            <thead>
+                <tr>
+                    <th>ประเภท</th>
+                    <th>ราคา</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลเรทค่าน้ำค่าไฟจะแสดงที่นี่ -->
+            </tbody>
+        </table>
+
+        <button class="btn add" onclick="addRate()">เพิ่มเรท</button>
+    </section>
+
+    <button class="btn" onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+    <script>
+        // ข้อมูลตัวอย่างเรทค่าน้ำค่าไฟ
+        const rates = [
+            { type: 'ค่าน้ำ', price: 15 },
+            { type: 'ค่าไฟ', price: 5 }
+        ];
+
+        function displayRateList() {
+            const tableBody = document.querySelector('#rateTable tbody');
+            tableBody.innerHTML = '';
+
+            rates.forEach((rate, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rate.type}</td>
+                    <td>${rate.price} บาท</td>
+                    <td>
+                        <button class="btn edit" onclick="editRate(${index})">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteRate(${index})">ลบ</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function addRate() {
+            const type = prompt('กรุณากรอกประเภท (ค่าน้ำ/ค่าไฟ):');
+            const price = prompt('กรุณากรอกราคาค่าบริการ (บาท):');
+
+            if (type && price) {
+                rates.push({ type, price: parseFloat(price) });
+                displayRateList();
+            }
+        }
+
+        function editRate(index) {
+            const newPrice = prompt('กรุณากรอกราคาใหม่:', rates[index].price);
+            if (newPrice) {
+                rates[index].price = parseFloat(newPrice);
+                displayRateList();
+            }
+        }
+
+        function deleteRate(index) {
+            if (confirm(`คุณต้องการลบข้อมูลเรท ${rates[index].type} หรือไม่?`)) {
+                rates.splice(index, 1);
+                displayRateList();
+            }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        // แสดงข้อมูลเริ่มต้น
+        displayRateList();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ฟอร์มออกบิลห้อง</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        window.onload = function() {
+            // ดึงพารามิเตอร์จาก URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomNumber = urlParams.get('room');
+            
+            // ถ้ามีหมายเลขห้อง ให้แสดงฟอร์มพร้อมกับหมายเลขห้อง
+            if (roomNumber) {
+                document.getElementById('roomNumber').textContent = roomNumber;
+            } else {
+                alert("ไม่พบหมายเลขห้อง!");
+            }
+        };
+
+        function calculateTotal() {
+            // คำนวณค่าน้ำ ค่าไฟ และยอดรวมทั้งหมด
+            const rent = parseFloat(document.getElementById('rent').value) || 0;
+
+            const waterCurrent = parseFloat(document.getElementById('waterCurrent').value) || 0;
+            const waterPrevious = parseFloat(document.getElementById('waterPrevious').value) || 0;
+            const waterRate = parseFloat(document.getElementById('waterRate').value) || 0;
+            const waterUsage = waterCurrent - waterPrevious;
+            const waterTotal = waterUsage * waterRate;
+
+            const electricityCurrent = parseFloat(document.getElementById('electricityCurrent').value) || 0;
+            const electricityPrevious = parseFloat(document.getElementById('electricityPrevious').value) || 0;
+            const electricityRate = parseFloat(document.getElementById('electricityRate').value) || 0;
+            const electricityUsage = electricityCurrent - electricityPrevious;
+            const electricityTotal = electricityUsage * electricityRate;
+
+            const totalAmount = rent + waterTotal + electricityTotal;
+            document.getElementById('waterTotal').value = waterTotal.toFixed(2);
+            document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
+            document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+        }
+
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+    </script>
+    <style>
+        /* เมนู */
+        .menu {
+            display: none; /* ซ่อนเมนูเริ่มต้น */
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 8px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+                <li><a href="register.html">ลงทะเบียน</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="bill-section">
+        <h2>ออกบิลห้องพัก</h2>
+
+        <!-- ฟอร์มกรอกข้อมูลห้อง -->
+        <div id="billingForm" style="margin-top: 30px;">
+            <h3>กรอกรายละเอียดห้อง <span id="roomNumber"></span></h3>
+            <form onsubmit="event.preventDefault(); calculateTotal();">
+                <div>
+                    <label for="rent">ค่าเช่า (ต่อเดือน)</label>
+                    <input type="number" id="rent" required>
+                </div>
+                <div>
+                    <h4>ค่าน้ำ</h4>
+                    <label for="waterCurrent">เลขมิเตอร์น้ำครั้งนี้</label>
+                    <input type="number" id="waterCurrent" required>
+                    <label for="waterPrevious">เลขมิเตอร์น้ำครั้งก่อน</label>
+                    <input type="number" id="waterPrevious" required>
+                    <label for="waterRate">ราคาต่อน้ำ (บาท/หน่วย)</label>
+                    <input type="number" id="waterRate" required>
+                    <label for="waterTotal">ค่าน้ำรวม (บาท)</label>
+                    <input type="number" id="waterTotal" readonly>
+                </div>
+
+                <div>
+                    <h4>ค่าไฟ</h4>
+                    <label for="electricityCurrent">เลขมิเตอร์ไฟครั้งนี้</label>
+                    <input type="number" id="electricityCurrent" required>
+                    <label for="electricityPrevious">เลขมิเตอร์ไฟครั้งก่อน</label>
+                    <input type="number" id="electricityPrevious" required>
+                    <label for="electricityRate">ราคาต่อไฟ (บาท/หน่วย)</label>
+                    <input type="number" id="electricityRate" required>
+                    <label for="electricityTotal">ค่าไฟรวม (บาท)</label>
+                    <input type="number" id="electricityTotal" readonly>
+                </div>
+
+                <div>
+                    <h4>ยอดรวมทั้งหมด</h4>
+                    <input type="number" id="totalAmount" readonly>
+                </div>
+
+                <div>
+                    <button type="submit">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+</body>
+</html>

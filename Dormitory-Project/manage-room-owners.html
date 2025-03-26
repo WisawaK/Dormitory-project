@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลเจ้าของหอพัก - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #d63384;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #d63394;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn.delete {
+            background-color: #f44336;
+        }
+
+        .btn.edit {
+            background-color: #ffa500;
+        }
+
+        .btn.add {
+            background-color: #008CBA;
+        }
+
+        /* สไตล์เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: #f1f1f1;
+            width: 200px;
+            border: 1px solid #ddd;
+        }
+
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .menu li {
+            padding: 8px;
+        }
+
+        .menu li a {
+            text-decoration: none;
+            color: #000;
+        }
+
+        .menu li a:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="admin-management">
+        <h2>จัดการข้อมูลเจ้าของหอพัก</h2>
+
+        <!-- ตารางแสดงข้อมูลแอดมิน -->
+        <table id="adminTable">
+            <thead>
+                <tr>
+                    <th>ไอดี</th>
+                    <th>ชื่อแอดมิน</th>
+                    <th>Username</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลแอดมินจะแสดงที่นี่ -->
+            </tbody>
+        </table>
+
+        <button class="btn add" onclick="addAdmin()">เพิ่มแอดมินใหม่</button>
+    </section>
+
+    <script>
+        // ข้อมูลตัวอย่างของแอดมิน
+        const admins = [
+            { id: 1, name: 'นายสมชาย ชัยรัตน์', username: 'admin1', password: 'admin123' },
+            { id: 2, name: 'นางสาวสาอิ นามสม', username: 'admin2', password: 'admin234' },
+            // เพิ่มแอดมินใหม่ตามต้องการ
+        ];
+
+        // ฟังก์ชันเพื่อแสดงข้อมูลแอดมิน
+        function displayAdminList() {
+            const tableBody = document.querySelector('#adminTable tbody');
+            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
+
+            admins.forEach((admin, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${admin.id}</td>
+                    <td>${admin.name}</td>
+                    <td>${admin.username}</td>
+                    <td>
+                        <button class="btn edit" onclick="editAdmin(${index})">แก้ไขข้อมูล</button>
+                        <button class="btn delete" onclick="deleteAdmin(${index})">ลบข้อมูล</button>
+                        <button class="btn edit" onclick="changePassword(${index})">แก้ไขรหัสผ่าน</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // ฟังก์ชันเพิ่มแอดมินใหม่
+        function addAdmin() {
+            const name = prompt('กรุณากรอกชื่อแอดมินใหม่:');
+            const username = prompt('กรุณากรอก Username ของแอดมินใหม่:');
+            const password = prompt('กรุณากรอกรหัสผ่านของแอดมินใหม่:');
+            
+            if (name && username && password) {
+                const newAdmin = {
+                    id: admins.length + 1,
+                    name: name,
+                    username: username,
+                    password: password
+                };
+                admins.push(newAdmin);
+                displayAdminList(); // แสดงข้อมูลหลังการเพิ่ม
+            }
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลแอดมิน
+        function editAdmin(index) {
+            const admin = admins[index];
+            const newName = prompt('กรุณากรอกชื่อแอดมินใหม่:', admin.name);
+            const newUsername = prompt('กรุณากรอก Username ใหม่:', admin.username);
+
+            if (newName && newUsername) {
+                admins[index].name = newName;
+                admins[index].username = newUsername;
+                displayAdminList(); // แสดงข้อมูลที่อัปเดต
+            }
+        }
+
+        // ฟังก์ชันแก้ไขรหัสผ่านแอดมิน
+        function changePassword(index) {
+            const newPassword = prompt('กรุณากรอกรหัสผ่านใหม่:');
+            if (newPassword) {
+                admins[index].password = newPassword;
+                alert('รหัสผ่านถูกเปลี่ยนเรียบร้อย');
+            }
+        }
+
+        // ฟังก์ชันลบแอดมิน
+        function deleteAdmin(index) {
+            const confirmDelete = confirm(`คุณต้องการลบข้อมูลของแอดมิน ${admins[index].name} หรือไม่?`);
+            if (confirmDelete) {
+                admins.splice(index, 1); // ลบข้อมูลแอดมิน
+                displayAdminList(); // แสดงข้อมูลหลังการลบ
+            }
+        }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลแอดมินเมื่อโหลดหน้า
+        displayAdminList();
+
+        // ฟังก์ชันเปิด/ปิดเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+        }
+    </script>
+
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</body>
+</html>

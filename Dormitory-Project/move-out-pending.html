@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รอย้ายออก - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* สไตล์สำหรับตาราง */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #d63384;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #d63384;
+        }
+
+        /* เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 10px;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            margin-bottom: 8px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li a:hover {
+            color: #007BFF;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #db68b1;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li><a href="login.html">เข้าสู่ระบบ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="move-out-section">
+        <h2>รอย้ายออก</h2>
+
+        <!-- ตารางแสดงข้อมูลห้องที่รอย้ายออก -->
+        <table id="moveOutTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ชื่อนามสกุลผู้ใช้</th>
+                    <th>เบอร์โทร</th>
+                    <th>ยอดค้างชำระ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลจะถูกกรองและแสดงในที่นี้ -->
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        // ข้อมูลตัวอย่างการรอย้ายออก
+        const moveOutList = [
+            { room: 'ห้อง 250', name: 'นายสมชาย ชัยรัตน์', phone: '0891234567', outstandingAmount: 1500 },
+            { room: 'ห้อง 331', name: 'นางสาวสาอิ นามสม', phone: '0892345678', outstandingAmount: 0 },
+            { room: 'ห้อง 324', name: 'นายประยุทธ วงค์วิทย์', phone: '0893456789', outstandingAmount: 2000 },
+            // เพิ่มข้อมูลได้ตามต้องการ
+        ];
+
+        // ฟังก์ชันเพื่อกรองข้อมูลห้องที่รอย้ายออก (เช่นมียอดค้างชำระ)
+        function displayMoveOutList() {
+            const tableBody = document.querySelector('#moveOutTable tbody');
+            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
+
+            // กรองข้อมูลที่มียอดค้างชำระ
+            const moveOutPending = moveOutList.filter(item => item.outstandingAmount > 0);
+
+            // แสดงข้อมูลในตาราง
+            moveOutPending.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.room}</td>
+                    <td>${item.name}</td>
+                    <td>${item.phone}</td>
+                    <td>${item.outstandingAmount} บาท</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลเมื่อโหลดหน้า
+        displayMoveOutList();
+
+        // ฟังก์ชันแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+    </script>
+   
+    <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</body>
+</html>

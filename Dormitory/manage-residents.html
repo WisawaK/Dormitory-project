@@ -16,7 +16,9 @@
 
     <section class="tenant-management">
         <h2>จัดการข้อมูลผู้เช่า</h2>
-
+         <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+    
         <!-- แบบฟอร์มเพิ่ม/แก้ไขข้อมูล -->
         <form id="tenantForm" style="margin-left: 10px;">
             <input type="hidden" id="tenantId">
@@ -44,8 +46,7 @@
         </table>
     </section>
 
-    <!-- ปุ่มสำหรับเปิดเมนู -->
-    <button onclick="toggleMenu()">เมนู</button>
+   
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
     <div id="menu" class="menu" style="display: none;">
@@ -171,6 +172,7 @@
         // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
         window.toggleMenu = function() {
             const menu = document.getElementById("menu");
+            // ตรวจสอบว่าเมนูซ่อนหรือแสดงอยู่
             if (menu.style.display === "block") {
                 menu.style.display = "none";
             } else {
@@ -180,4 +182,3 @@
     </script>
 </body>
 </html>
-

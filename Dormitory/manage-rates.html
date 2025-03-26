@@ -3,99 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการเรทค่าน้ำค่าไฟ - หอพักนักศึกษา WS</title>
+    <title>จัดการข้อมูลเรทค่าน้ำค่าไฟ - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* สไตล์สำหรับตาราง */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #d63384;
-            padding: 8px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #d63384;
-        }
-
-        /* ปุ่ม */
-        .btn {
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn.delete {
-            background-color: #f44336;
-        }
-
-        .btn.edit {
-            background-color: #ffa500;
-        }
-
-        .btn.add {
-            background-color: #008CBA;
-        }
-
-        /* สไตล์เมนู */
-        .menu {
-            display: none;
-            position: absolute;
-            top: 50px;
-            left: 0;
-            background-color: #f1f1f1;
-            width: 200px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .menu ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .menu ul li {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .menu ul li:last-child {
-            border-bottom: none;
-        }
-
-        .menu ul li a {
-            text-decoration: none;
-            color: #333;
-            display: block;
-        }
-
-        .menu ul li a:hover {
-            background-color: #ddd;
-        }
-    </style>
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
 </head>
 <body>
     <header>
         <h1>หอพักนักศึกษา "WS"</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">หน้าหลัก</a></li>
-                <li><a href="login.html">เข้าสู่ระบบ</a></li>
-            </ul>
-        </nav>
     </header>
 
     <section class="rate-management">
-        <h2>จัดการเรทค่าน้ำค่าไฟ</h2>
+        <h2>จัดการข้อมูลเรทค่าน้ำค่าไฟ</h2>
+        <!-- ปุ่มสำหรับเปิดเมนู -->
+        <button onclick="toggleMenu()">เมนู</button>
+
+        <!-- แบบฟอร์มเพิ่ม/แก้ไขข้อมูล (จะซ่อนเมื่อไม่ใช้) -->
+        <form id="rateForm" style="margin-left: 10px; display: none;">
+            <input type="hidden" id="rateId">
+            <input type="text" id="waterRate" placeholder="ประเภท" required>
+            <input type="text" id="price" placeholder="ราคา" required>
+            <button type="submit">เสร็จสิ้น</button>
+        </form>
 
         <!-- ตารางแสดงข้อมูลเรทค่าน้ำค่าไฟ -->
         <table id="rateTable">
@@ -107,17 +37,13 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- ข้อมูลเรทค่าน้ำค่าไฟจะแสดงที่นี่ -->
+                <!-- ข้อมูลจาก Firebase จะถูกแสดงที่นี่ -->
             </tbody>
         </table>
-
-        <button class="btn add" onclick="addRate()">เพิ่มเรท</button>
     </section>
 
-    <button class="btn" onclick="toggleMenu()">เมนู</button>
-
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
-    <div id="menu" class="menu">
+    <div id="menu" class="menu" style="display: none;">
         <ul>
             <li><a href="bill.html">ออกบิล</a></li>
             <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
@@ -133,64 +59,136 @@
         </ul>
     </div>
 
-    <script>
-        // ข้อมูลตัวอย่างเรทค่าน้ำค่าไฟ
-        const rates = [
-            { type: 'ค่าน้ำ', price: 15 },
-            { type: 'ค่าไฟ', price: 5 }
-        ];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
-        function displayRateList() {
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const rateCollection = collection(db, "rates");
+
+        // ดึงข้อมูลเรทค่าน้ำค่าไฟจาก Firestore และแสดงในตาราง
+        async function fetchRates() {
+            const snapshot = await getDocs(rateCollection);
             const tableBody = document.querySelector('#rateTable tbody');
             tableBody.innerHTML = '';
 
-            rates.forEach((rate, index) => {
+            snapshot.forEach(doc => {
+                const rate = doc.data();
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${rate.type}</td>
-                    <td>${rate.price} บาท</td>
+                    <td>${rate.waterRate}</td>
+                    <td>${rate.price}</td>
                     <td>
-                        <button class="btn edit" onclick="editRate(${index})">แก้ไข</button>
-                        <button class="btn delete" onclick="deleteRate(${index})">ลบ</button>
+                        <button class="btn edit" onclick="editRate('${doc.id}', '${rate.waterRate}', '${rate.price}')">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteRate('${doc.id}')">ลบข้อมูล</button>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
-        function addRate() {
-            const type = prompt('กรุณากรอกประเภท (ค่าน้ำ/ค่าไฟ):');
-            const price = prompt('กรุณากรอกราคาค่าบริการ (บาท):');
+        // เพิ่มหรือแก้ไขข้อมูลเรทค่าน้ำค่าไฟ
+        document.getElementById("rateForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
 
-            if (type && price) {
-                rates.push({ type, price: parseFloat(price) });
-                displayRateList();
+            const rateId = document.getElementById("rateId").value;
+            const waterRate = document.getElementById("waterRate").value;
+            const price = document.getElementById("price").value;
+
+            if (rateId) {
+                // แก้ไขข้อมูล
+                const rateRef = doc(db, "rates", rateId);
+                await updateDoc(rateRef, { waterRate, price });
+                alert("แก้ไขข้อมูลสำเร็จ!");
+            } else {
+                // เพิ่มข้อมูลใหม่
+                await addDoc(rateCollection, { waterRate, price });
+                alert("เพิ่มข้อมูลเรทค่าน้ำค่าไฟสำเร็จ!");
+            }
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById("rateForm").reset();
+            document.getElementById("rateId").value = "";
+
+            // โหลดข้อมูลใหม่
+            fetchRates();
+            hideForm(); // ซ่อนฟอร์มหลังการบันทึก
+        });
+
+        // ฟังก์ชันลบข้อมูลเรทค่าน้ำค่าไฟ
+        window.deleteRate = async function (id) {
+            if (!id) {
+                console.error("Rate ID is missing!");
+                return;
+            }
+
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "rates", id));
+                    alert("ลบข้อมูลสำเร็จ!");
+                    fetchRates(); // โหลดข้อมูลใหม่หลังลบ
+                } catch (error) {
+                    console.error("Error deleting rate:", error);
+                }
             }
         }
 
-        function editRate(index) {
-            const newPrice = prompt('กรุณากรอกราคาใหม่:', rates[index].price);
-            if (newPrice) {
-                rates[index].price = parseFloat(newPrice);
-                displayRateList();
-            }
-        }
+        // ฟังก์ชันแก้ไขข้อมูล
+        window.editRate = function(id, waterRate, price) {
+            document.getElementById("rateId").value = id;
+            document.getElementById("waterRate").value = waterRate;
+            document.getElementById("price").value = price;
+            showForm(); // แสดงฟอร์มเมื่อเลือกแก้ไข
+        };
 
-        function deleteRate(index) {
-            if (confirm(`คุณต้องการลบข้อมูลเรท ${rates[index].type} หรือไม่?`)) {
-                rates.splice(index, 1);
-                displayRateList();
-            }
+        function showForm() {
+            const form = document.getElementById("rateForm");
+            form.style.display = "block"; 
+            setTimeout(() => { // ทำให้แสดงแบบ fade-in
+                form.style.visibility = "visible";
+                form.style.opacity = "1";
+            }, 10);
         }
+        
+        function hideForm() {
+            const form = document.getElementById("rateForm");
+            form.style.opacity = "0";
+            form.style.visibility = "hidden";
+            setTimeout(() => { // ซ่อนหลังจาก effect fade-out จบ
+                form.style.display = "none";
+            }, 300);
+        }
+        
+        
+        
+        // โหลดข้อมูลครั้งแรก
+        fetchRates();
 
-        function toggleMenu() {
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
             const menu = document.getElementById("menu");
-            menu.style.display = menu.style.display === "block" ? "none" : "block";
-        }
-
-        // แสดงข้อมูลเริ่มต้น
-        displayRateList();
+            // ตรวจสอบว่าเมนูซ่อนหรือแสดงอยู่
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
     </script>
 </body>
 </html>
-

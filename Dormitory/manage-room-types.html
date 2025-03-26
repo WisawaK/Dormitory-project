@@ -3,203 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการข้อมูลและประเภทห้องพัก - หอพักนักศึกษา WS</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>จัดการห้องพัก - Firestore</title>
     <style>
-        /* สไตล์สำหรับตาราง */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #d63384; padding: 8px; text-align: center; }
+        th { background-color: #d63384; color: white; }
+        .btn { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; }
+        .btn.delete { background-color: #f44336; color: white; }
+        .btn.edit { background-color: #ffa500; color: white; }
+        .btn.add { background-color: #008CBA; color: white; }
 
-        th, td {
-            border: 1px solid #d63384;
-            padding: 8px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #d63384;
-        }
-
-        /* ปุ่ม */
-        .btn {
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn.delete {
-            background-color: #f44336;
-        }
-
-        .btn.edit {
-            background-color: #ffa500;
-        }
-
-        .btn.add {
-            background-color: #008CBA;
-        }
-
-        .room-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-        }
-
-        /* สไตล์เมนู */
+        /* ปรับแต่งสไตล์สำหรับเมนู */
         .menu {
-            display: none;
+            display: none; /* ซ่อนเมนูเริ่มต้น */
             position: absolute;
             top: 50px;
-            left: 0;
-            background-color: #f1f1f1;
-            width: 200px;
+            left: 10px;
+            background-color: #fff;
             border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 200px;
         }
-
         .menu ul {
             list-style-type: none;
             padding: 0;
+            margin: 0;
         }
-
         .menu li {
-            padding: 8px;
+            margin: 10px 0;
         }
-
         .menu li a {
             text-decoration: none;
-            color: #000;
+            color: #333;
+            padding: 8px;
+            display: block;
+            transition: background-color 0.3s;
         }
-
         .menu li a:hover {
-            background-color: #ddd;
+            background-color: #f1f1f1;
         }
     </style>
-</head>
-<body>
-    <header>
-        <h1>หอพักนักศึกษา "WS"</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">หน้าหลัก</a></li>
-                <li><a href="login.html">เข้าสู่ระบบ</a></li>
-            </ul>
-        </nav>
-    </header>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } 
+        from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
-    <section class="room-management">
-        <h2>จัดการข้อมูลและประเภทห้องพัก</h2>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+        };
 
-        <!-- ตารางแสดงข้อมูลห้องพัก -->
-        <table id="roomTable">
-            <thead>
-                <tr>
-                    <th>ไอดี</th>
-                    <th>รูปภาพ</th>
-                    <th>ประเภทห้อง</th>
-                    <th>ราคาค่าเช่าต่อเดือน</th>
-                    <th>ค่ามัดจำ</th>
-                    <th>จัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- ข้อมูลห้องพักจะแสดงที่นี่ -->
-            </tbody>
-        </table>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        <button class="btn add" onclick="addRoom()">เพิ่มห้องใหม่</button>
-    </section>
+        function loadRooms() {
+            const roomTable = document.querySelector("#roomTable tbody");
+            const q = query(collection(db, "rooms"), orderBy("id", "asc"));
 
-    <script>
-        // ข้อมูลตัวอย่างห้องพัก
-        const rooms = [
-            { id: 1, image: 'room1.png', type: 'ห้องพัดลม', rent: 3000, deposit: 1000 },
-            { id: 2, image: 'room2.jpg', type: 'ห้องแอร์', rent: 4500, deposit: 1500 },
-            // เพิ่มห้องใหม่ตามต้องการ
-        ];
+            onSnapshot(q, (snapshot) => {
+                roomTable.innerHTML = "";
+                if (snapshot.empty) {
+                    roomTable.innerHTML = `<tr><td colspan="5">ไม่มีข้อมูลห้องพัก</td></tr>`;
+                    return;
+                }
 
-        // ฟังก์ชันเพื่อแสดงข้อมูลห้องพัก
-        function displayRoomList() {
-            const tableBody = document.querySelector('#roomTable tbody');
-            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
-
-            rooms.forEach((room, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${room.id}</td>
-                    <td><img src="${room.image}" alt="รูปภาพห้อง" class="room-image"></td>
-                    <td>${room.type}</td>
-                    <td>${room.rent} บาท</td>
-                    <td>${room.deposit} บาท</td>
-                    <td>
-                        <button class="btn edit" onclick="editRoom(${index})">แก้ไขข้อมูล</button>
-                        <button class="btn delete" onclick="deleteRoom(${index})">ลบข้อมูล</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
+                snapshot.forEach((doc) => {
+                    const room = doc.data();
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${room.id}</td>
+                        <td>${room.ประเภทห้อง || "ไม่ระบุ"}</td>
+                        <td>${room.ราคาค่าเช่าต่อเดือน || "ไม่ระบุ"}</td>
+                        <td>${room.ค่ามัดจำ || "ไม่ระบุ"}</td>
+                        <td>
+                            <button class="btn edit" onclick="fillForm('${doc.id}', '${room.id}', '${room.ประเภทห้อง}', '${room.ราคาค่าเช่าต่อเดือน}', '${room.ค่ามัดจำ}')">แก้ไข</button>
+                            <button class="btn delete" onclick="deleteRoom('${doc.id}')">ลบ</button>
+                        </td>
+                    `;
+                    roomTable.appendChild(row);
+                });
             });
         }
 
-        // ฟังก์ชันเพิ่มห้องใหม่
-        function addRoom() {
-            const type = prompt('กรุณากรอกประเภทห้อง (ห้องพัดลมหรือห้องแอร์):');
-            const rent = prompt('กรุณากรอกราคาค่าเช่าต่อเดือน (บาท):');
-            const deposit = prompt('กรุณากรอกค่ามัดจำ (บาท):');
-            const image = prompt('กรุณากรอกลิงก์รูปภาพของห้อง (URL):');
-            
-            if (type && rent && deposit && image) {
-                const newRoom = {
-                    id: rooms.length + 1,
-                    image: image,
-                    type: type,
-                    rent: parseInt(rent),
-                    deposit: parseInt(deposit)
-                };
-                rooms.push(newRoom);
-                displayRoomList(); // แสดงข้อมูลหลังการเพิ่ม
+        window.fillForm = function(docId, id, type, rent, deposit) {
+            document.getElementById("roomId").value = docId;
+            document.getElementById("roomNumber").value = id;
+            document.getElementById("roomType").value = type;
+            document.getElementById("rentPrice").value = rent.replace(" บาท", "");
+            document.getElementById("deposit").value = deposit.replace(" บาท", "");
+        }
+
+        window.submitForm = async function() {
+            const docId = document.getElementById("roomId").value;
+            const id = document.getElementById("roomNumber").value;
+            const type = document.getElementById("roomType").value;
+            const rent = document.getElementById("rentPrice").value;
+            const deposit = document.getElementById("deposit").value;
+
+            if (!id || !type || !rent || !deposit) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+                return;
+            }
+
+            try {
+                if (docId) {
+                    // แก้ไขข้อมูลห้อง
+                    await updateDoc(doc(db, "rooms", docId), {
+                        id: id,
+                        ประเภทห้อง: type,
+                        ราคาค่าเช่าต่อเดือน: rent + " บาท",
+                        ค่ามัดจำ: deposit + " บาท"
+                    });
+                    alert("อัปเดตข้อมูลสำเร็จ!");
+                } else {
+                    // เพิ่มห้องใหม่
+                    await addDoc(collection(db, "rooms"), {
+                        id: id,
+                        ประเภทห้อง: type,
+                        ราคาค่าเช่าต่อเดือน: rent + " บาท",
+                        ค่ามัดจำ: deposit + " บาท"
+                    });
+                    alert("เพิ่มห้องสำเร็จ!");
+                }
+                document.getElementById("roomForm").reset();
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด: " + error);
             }
         }
 
-        // ฟังก์ชันแก้ไขข้อมูลห้อง
-        function editRoom(index) {
-            const room = rooms[index];
-            const newType = prompt('กรุณากรอกประเภทห้องใหม่:', room.type);
-            const newRent = prompt('กรุณากรอกราคาค่าเช่าต่อเดือนใหม่ (บาท):', room.rent);
-            const newDeposit = prompt('กรุณากรอกค่ามัดจำใหม่ (บาท):', room.deposit);
-            const newImage = prompt('กรุณากรอกลิงก์รูปภาพใหม่ (URL):', room.image);
-
-            if (newType && newRent && newDeposit && newImage) {
-                rooms[index].type = newType;
-                rooms[index].rent = parseInt(newRent);
-                rooms[index].deposit = parseInt(newDeposit);
-                rooms[index].image = newImage;
-                displayRoomList(); // แสดงข้อมูลที่อัปเดต
+        window.deleteRoom = async function(docId) {
+            if (confirm("คุณต้องการลบห้องนี้หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "rooms", docId));
+                    alert("ลบห้องสำเร็จ!");
+                } catch (error) {
+                    alert("เกิดข้อผิดพลาด: " + error);
+                }
             }
         }
 
-        // ฟังก์ชันลบห้อง
-        function deleteRoom(index) {
-            const confirmDelete = confirm(`คุณต้องการลบข้อมูลห้อง ID ${rooms[index].id} หรือไม่?`);
-            if (confirmDelete) {
-                rooms.splice(index, 1); // ลบข้อมูลห้อง
-                displayRoomList(); // แสดงข้อมูลหลังการลบ
+        // ฟังก์ชันสำหรับเปิด/ปิดเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
             }
         }
 
-        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลห้องเมื่อโหลดหน้า
-        displayRoomList();
-
-        // ฟังก์ชันเปิด/ปิดเมนู
-        function toggleMenu() {
-            const menu = document.getElementById('menu');
-            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-        }
+        loadRooms();
     </script>
+</head>
+<body>
+    <h2>จัดการห้องพัก</h2>
 
+    <!-- ฟอร์มกรอกข้อมูล -->
+    <form id="roomForm">
+        <input type="hidden" id="roomId">
+        <table>
+            <tr>
+                <th>เลขห้อง</th>
+                <th>ประเภทห้อง</th>
+                <th>ราคาค่าเช่า</th>
+                <th>ค่ามัดจำ</th>
+                <th>จัดการ</th>
+            </tr>
+            <tr>
+                <td><input type="text" id="roomNumber" required></td>
+                <td><input type="text" id="roomType" required></td>
+                <td><input type="text" id="rentPrice" required></td>
+                <td><input type="text" id="deposit" required></td>
+                <td><button type="button" class="btn add" onclick="submitForm()">เพิ่ม/แก้ไข</button></td>
+            </tr>
+        </table>
+    </form>
+
+    <h3>รายการห้องพัก</h3>
+    <table id="roomTable">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>ประเภทห้อง</th>
+                <th>ราคาค่าเช่า</th>
+                <th>ค่ามัดจำ</th>
+                <th>จัดการ</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
     <button onclick="toggleMenu()">เมนู</button>
 
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->

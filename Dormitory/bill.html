@@ -5,56 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ออกบิล - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Firebase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<style>
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #d63384; padding: 8px; text-align: center; }
-    th { background-color: #d63384; color: white; }
-    .btn { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; }
-    .btn.delete { background-color: #f44336; color: white; }
-    .btn.edit { background-color: #ffa500; color: white; }
-    .btn.add { background-color: #008CBA; color: white; }
-
-    /* ปรับแต่งสไตล์สำหรับเมนู */
-    .menu {
-        display: none; /* ซ่อนเมนูเริ่มต้น */
-        position: absolute;
-        top: 50px;
-        left: 10px;
-        background-color: #fff;
-        border: 1px solid #ddd;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 10px;
-        width: 200px;
-    }
-    .menu ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-    }
-    .menu li {
-        margin: 10px 0;
-    }
-    .menu li a {
-        text-decoration: none;
-        color: #333;
-        padding: 8px;
-        display: block;
-        transition: background-color 0.3s;
-    }
-    .menu li a:hover {
-        background-color: #f1f1f1;
-    }
-</style>
 <body>
     <header>
         <h1>หอพักนักศึกษา "WS"</h1>
     </header>
-
     <section>
         <h2>ออกบิลห้องพัก</h2>
         <button onclick="toggleMenu()">เมนู</button>
@@ -64,8 +22,6 @@
                 <tr>
                     <th>ห้อง</th>
                     <th>สถานะการชำระเงิน</th>
-                    <th>วันที่ครบกำหนด</th>
-                    <th>ค่าน้ำค่าไฟ</th>
                     <th>ดำเนินการ</th>
                 </tr>
             </thead>
@@ -73,33 +29,13 @@
         </table>
         <canvas id="paymentStatusChart" width="400" height="400"></canvas>
     </section>
-
-    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
-    <div id="menu" class="menu" style="display: none;">
-        <ul>
-            <li><a href="bill.html">ออกบิล</a></li>
-            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
-            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
-            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
-            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
-            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
-            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
-            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
-            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
-            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="logout.html">ออกจากระบบ</a></li>
-        </ul>
-    </div>
-
+    
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
-
-        // Firebase Configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        
         const firebaseConfig = {
-            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            apiKey: "AIzaSyBCW...",
             authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
             projectId: "domitory-1a0c3-9c643",
             storageBucket: "domitory-1a0c3-9c643.appspot.com",
@@ -110,16 +46,33 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const billsCollection = collection(db, "bills");
+        const billsCollection = collection(db, "bill");
 
-        // ฟังก์ชันดึงข้อมูลบิลทั้งหมด
+        let paymentChart;
+
+        function updateChart(paid, unpaid) {
+            const ctx = document.getElementById('paymentStatusChart').getContext('2d');
+            if (paymentChart) {
+                paymentChart.destroy();
+            }
+            paymentChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['ชำระแล้ว', 'ยังไม่ชำระ'],
+                    datasets: [{
+                        data: [paid, unpaid],
+                        backgroundColor: ['#4CAF50', '#FF6347']
+                    }]
+                }
+            });
+        }
+
         function fetchBills() {
-            const tableBody = document.getElementById("billTableBody");
-
             onSnapshot(billsCollection, (querySnapshot) => {
-                tableBody.innerHTML = "";
                 let paidCount = 0;
                 let unpaidCount = 0;
+                const tableBody = document.getElementById("billTableBody");
+                tableBody.innerHTML = "";
 
                 const sortedBills = querySnapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -130,8 +83,6 @@
                     row.innerHTML = `
                         <td>${data.room}</td>
                         <td>${data.status}</td>
-                        <td>${data.dueDate}</td>
-                        <td>${data.waterElectricityFee}</td>
                         <td>
                             <button onclick="viewDetails('${data.room}')">ดูรายละเอียด</button>
                             <button onclick="editBill('${data.id}', '${data.room}', '${data.status}')">แก้ไข</button>
@@ -146,33 +97,19 @@
                         unpaidCount++;
                     }
                 });
-
                 updateChart(paidCount, unpaidCount);
             });
         }
 
-        // ฟังก์ชันเพิ่มบิล
         window.addBill = async function () {
             const room = prompt("กรุณากรอกหมายเลขห้อง:");
             const status = confirm("ชำระเงินแล้วหรือไม่?") ? "ชำระแล้ว" : "ยังไม่ชำระ";
-            const waterElectricityFee = prompt("กรุณากรอกค่าน้ำค่าไฟ:");
 
-            const dueDate = new Date();
-            dueDate.setMonth(dueDate.getMonth() + 1); // กำหนดวันครบกำหนดชำระ
-
-            if (room && waterElectricityFee) {
-                await addDoc(billsCollection, {
-                    room,
-                    status,
-                    waterElectricityFee,
-                    dueDate: dueDate.toISOString(),
-                    createdAt: new Date().toISOString(),
-                });
-                alert("เพิ่มบิลสำเร็จ!");
+            if (room) {
+                await addDoc(billsCollection, { room, status });
             }
         };
 
-        // ฟังก์ชันแก้ไขบิล
         window.editBill = async function (id, currentRoom, currentStatus) {
             const newRoom = prompt("แก้ไขหมายเลขห้อง:", currentRoom);
             if (newRoom === null) return;
@@ -180,7 +117,7 @@
             const newStatus = confirm("ชำระเงินแล้วหรือไม่?") ? "ชำระแล้ว" : "ยังไม่ชำระ";
 
             try {
-                const billRef = doc(db, "bills", id);
+                const billRef = doc(db, "bill", id);
                 await updateDoc(billRef, { room: newRoom, status: newStatus });
                 alert("แก้ไขบิลสำเร็จ!");
             } catch (error) {
@@ -189,12 +126,10 @@
             }
         };
 
-        // ฟังก์ชันลบบิล
         window.deleteBill = async function (id, rowElement) {
             if (confirm("ต้องการลบรายการนี้ใช่หรือไม่?")) {
                 try {
-                    await deleteDoc(doc(db, "bills", id));
-                    console.log("ลบเอกสารสำเร็จ:", id);
+                    await deleteDoc(doc(db, "bill", id));
                     rowElement.remove();
                     alert("ลบสำเร็จ!");
                 } catch (error) {
@@ -204,36 +139,13 @@
             }
         };
 
-        // ฟังก์ชันแสดงรายละเอียด
         window.viewDetails = function (room) {
             window.location.href = `billform.html?room=${room}`;
         };
 
-        // ฟังก์ชันอัปเดตกราฟ
-        function updateChart(paid, unpaid) {
-            if (window.paymentStatusChart) {
-                window.paymentStatusChart.destroy();
-            }
-
-            const ctx1 = document.getElementById('paymentStatusChart').getContext('2d');
-            window.paymentStatusChart = new Chart(ctx1, {
-                type: 'pie',
-                data: {
-                    labels: ['ชำระแล้ว', 'ยังไม่ชำระ'],
-                    datasets: [{
-                        data: [paid, unpaid],
-                        backgroundColor: ['#4CAF50', '#FF6347']
-                    }]
-                }
-            });
-        }
-
-        window.onload = function () {
-            fetchBills();
-        };
-
-        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
-        window.toggleMenu = function() {
+        window.onload = fetchBills;
+         // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+         window.toggleMenu = function() {
             const menu = document.getElementById("menu");
             if (menu.style.display === "block") {
                 menu.style.display = "none";
@@ -242,6 +154,23 @@
             }
         };
     </script>
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
 </body>
 </html>
-

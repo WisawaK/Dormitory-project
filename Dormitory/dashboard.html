@@ -5,65 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* สไตล์สำหรับเมนู */
-        .menu {
-            display: none;
-            position: absolute;
-            top: 60px;
-            left: 0;
-            width: 200px;
-            background-color: #333;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .menu ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .menu ul li {
-            padding: 10px;
-        }
-
-        .menu ul li a {
-            color: rgb(110, 107, 107);
-            text-decoration: none;
-            display: block;
-        }
-
-        .menu ul li a:hover {
-            background-color: #575757;
-        }
-
-        /* สไตล์สำหรับปุ่มเมนู */
-        #menuButton {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        #menuButton:hover {
-            background-color: #45a049;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 </head>
 <body>
     <header>
         <h1>Dashboard หอพักนักศึกษา "WS"</h1>
-        <!-- ปุ่มเมนู -->
-        <button id="menuButton">เมนู</button>
     </header>
-    
+     <!-- ปุ่มสำหรับเปิดเมนู -->
+     <button onclick="toggleMenu()">เมนู</button>
+    <section>
+        <h2>สรุปสถานะห้องพัก</h2>
+        <ul>
+            <li><strong>จำนวนห้องทั้งหมด: </strong><input type="number" id="totalRooms"></li>
+            <li><strong>จำนวนห้องที่มีผู้เช่า: </strong><input type="number" id="rentedRooms"></li>
+            <li><strong>จำนวนห้องว่าง: </strong><input type="number" id="vacantRooms"></li>
+            <li><strong>จำนวนห้องที่ถูกจอง: </strong><input type="number" id="reservedRooms"></li>
+            <li><strong>จำนวนห้องที่ต้องซ่อมแซม: </strong><input type="number" id="underRepairRooms"></li>
+        </ul>
+        <button id="saveData">บันทึกข้อมูล</button>
+    </section>
+
+    <section>
+        <h2>แผนภูมิแสดงสถานะห้องพัก</h2>
+        <canvas id="roomChart"></canvas>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.appspot.com",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            // ตรวจสอบว่าเมนูซ่อนหรือแสดงอยู่
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const dashboardRef = doc(db, "dashboard", "status");
+
+        let chartInstance = null;
+
+        async function fetchDashboardData() {
+            const docSnap = await getDoc(dashboardRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById("totalRooms").value = data.totalRooms || 0;
+                document.getElementById("rentedRooms").value = data.rentedRooms || 0;
+                document.getElementById("vacantRooms").value = data.vacantRooms || 0;
+                document.getElementById("reservedRooms").value = data.reservedRooms || 0;
+                document.getElementById("underRepairRooms").value = data.underRepairRooms || 0;
+
+                updateChart();
+            }
+        }
+
+        async function saveData() {
+            const updatedData = {
+                totalRooms: parseInt(document.getElementById("totalRooms").value),
+                rentedRooms: parseInt(document.getElementById("rentedRooms").value),
+                vacantRooms: parseInt(document.getElementById("vacantRooms").value),
+                reservedRooms: parseInt(document.getElementById("reservedRooms").value),
+                underRepairRooms: parseInt(document.getElementById("underRepairRooms").value),
+            };
+
+            await setDoc(dashboardRef, updatedData);
+            alert("บันทึกข้อมูลเรียบร้อย!");
+        }
+
+        function updateChart() {
+            const totalRooms = parseInt(document.getElementById("totalRooms").value);
+            const chartData = [
+                parseInt(document.getElementById("rentedRooms").value),
+                parseInt(document.getElementById("vacantRooms").value),
+                parseInt(document.getElementById("reservedRooms").value),
+                parseInt(document.getElementById("underRepairRooms").value),
+            ];
+
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = chartData;
+                chartInstance.options.scales.y.max = totalRooms;
+                chartInstance.update();
+            } else {
+                const ctx = document.getElementById("roomChart").getContext("2d");
+                chartInstance = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: ["มีผู้เช่า", "ห้องว่าง", "ถูกจอง", "ต้องซ่อมแซม"],
+                        datasets: [{
+                            label: "สถานะห้องพัก",
+                            data: chartData,
+                            backgroundColor: ["#4CAF50", "#FFC107", "#FF5722", "#9C27B0"]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: totalRooms
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.getElementById("saveData").addEventListener("click", saveData);
+
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("input", updateChart);
+        });
+
+        fetchDashboardData();
+    </script>
     <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
-    <div id="menu" class="menu">
+    <div id="menu" class="menu" style="display: none;">
         <ul>
             <li><a href="bill.html">ออกบิล</a></li>
             <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
@@ -74,135 +146,11 @@
             <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
             <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
             <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
             <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
             <li><a href="dashboard.html">Dashboard</a></li>
             <li><a href="logout.html">ออกจากระบบ</a></li>
         </ul>
     </div>
-
-    <!-- สรุปสถานะห้องพัก -->
-    <section>
-        <h2>สรุปสถานะห้องพัก</h2>
-        <ul>
-            <li><strong>จำนวนห้องทั้งหมด: </strong><span id="totalRooms">0</span></li>
-            <li><strong>จำนวนห้องที่มีผู้เช่า: </strong><span id="rentedRooms">0</span></li>
-            <li><strong>จำนวนห้องว่าง: </strong><span id="vacantRooms">0</span></li>
-            <li><strong>จำนวนห้องที่ถูกจอง: </strong><span id="reservedRooms">0</span></li>
-            <li><strong>จำนวนห้องที่ต้องซ่อมแซม: </strong><span id="underRepairRooms">0</span></li>
-        </ul>
-    </section>
-
-    <!-- สรุปค่าน้ำค่าไฟ -->
-    <section>
-        <h2>สรุปค่าน้ำค่าไฟ</h2>
-        <ul>
-            <li><strong>รายได้จากค่าเช่าประจำเดือน: </strong><span id="monthlyRentIncome">0</span> บาท</li>
-            <li><strong>รายได้จากค่าน้ำค่าไฟ: </strong><span id="waterElectricityIncome">0</span> บาท</li>
-            <li><strong>รายได้จากค่าบริการอื่นๆ: </strong><span id="otherIncome">0</span> บาท</li>
-            <li><strong>ยอดค้างชำระรวม: </strong><span id="totalOutstanding">0</span> บาท</li>
-        </ul>
-        <canvas id="incomeChart" width="400" height="200"></canvas>
-    </section>
-
-    <!-- แจ้งเตือนสำคัญ -->
-    <section>
-        <h2>แจ้งเตือนสำคัญ</h2>
-        <ul>
-            <li id="leaseExpiryAlert">สัญญาเช่าที่ใกล้หมดอายุ: <span>No Alerts</span></li>
-            <li id="unpaidAlert">การค้างค่าเช่า: <span>No Unpaid Bills</span></li>
-            <li id="repairRequestAlert">การแจ้งซ่อมที่รอดำเนินการ: <span>No Pending Repairs</span></li>
-            <li id="emergencyAlert">เหตุการณ์ฉุกเฉิน: <span>No Emergencies</span></li>
-            <li id="roomInspectionAlert">การนัดหมายตรวจห้อง: <span>No Inspections</span></li>
-        </ul>
-    </section>
-
-    <script type="module">
-        // ตัวอย่างข้อมูล
-        const dashboardData = {
-            rooms: {
-                total: 100,
-                rented: 50,
-                vacant: 30,
-                reserved: 10,
-                underRepair: 10
-            },
-            finances: {
-                monthlyRentIncome: 200000,
-                waterElectricityIncome: 30000,
-                otherIncome: 15000,
-                totalOutstanding: 50000
-            },
-            alerts: {
-                leaseExpiry: ["ห้อง 101", "ห้อง 205"],
-                unpaidBills: ["ห้อง 103", "ห้อง 204"],
-                pendingRepairs: ["ห้อง 202", "ห้อง 303"],
-                emergencies: ["ไฟฟ้าช็อตในห้อง 201"],
-                inspections: ["ห้อง 106"]
-            }
-        };
-
-        // แสดงข้อมูลสถานะห้องพัก
-        document.getElementById("totalRooms").textContent = dashboardData.rooms.total;
-        document.getElementById("rentedRooms").textContent = dashboardData.rooms.rented;
-        document.getElementById("vacantRooms").textContent = dashboardData.rooms.vacant;
-        document.getElementById("reservedRooms").textContent = dashboardData.rooms.reserved;
-        document.getElementById("underRepairRooms").textContent = dashboardData.rooms.underRepair;
-
-        // แสดงข้อมูลค่าน้ำค่าไฟ
-        document.getElementById("monthlyRentIncome").textContent = dashboardData.finances.monthlyRentIncome;
-        document.getElementById("waterElectricityIncome").textContent = dashboardData.finances.waterElectricityIncome;
-        document.getElementById("otherIncome").textContent = dashboardData.finances.otherIncome;
-        document.getElementById("totalOutstanding").textContent = dashboardData.finances.totalOutstanding;
-
-        // แสดงกราฟรายได้
-        const ctx = document.getElementById('incomeChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['ค่าเช่า', 'ค่าน้ำค่าไฟ', 'ค่าบริการอื่นๆ'],
-                datasets: [{
-                    label: 'รายได้',
-                    data: [dashboardData.finances.monthlyRentIncome, dashboardData.finances.waterElectricityIncome, dashboardData.finances.otherIncome],
-                    backgroundColor: ['#4CAF50', '#FF6347', '#FFD700'],
-                    borderColor: ['#4CAF50', '#FF6347', '#FFD700'],
-                    borderWidth: 1
-                }]
-            }
-        });
-
-        // แสดงแจ้งเตือน
-        if (dashboardData.alerts.leaseExpiry.length > 0) {
-            document.getElementById("leaseExpiryAlert").querySelector("span").textContent = dashboardData.alerts.leaseExpiry.join(", ");
-            document.getElementById("leaseExpiryAlert").style.color = "red";
-        }
-
-        if (dashboardData.alerts.unpaidBills.length > 0) {
-            document.getElementById("unpaidAlert").querySelector("span").textContent = dashboardData.alerts.unpaidBills.join(", ");
-            document.getElementById("unpaidAlert").style.color = "red";
-        }
-
-        if (dashboardData.alerts.pendingRepairs.length > 0) {
-            document.getElementById("repairRequestAlert").querySelector("span").textContent = dashboardData.alerts.pendingRepairs.join(", ");
-        }
-
-        if (dashboardData.alerts.emergencies.length > 0) {
-            document.getElementById("emergencyAlert").querySelector("span").textContent = dashboardData.alerts.emergencies.join(", ");
-            document.getElementById("emergencyAlert").style.color = "red";
-        }
-
-        if (dashboardData.alerts.inspections.length > 0) {
-            document.getElementById("roomInspectionAlert").querySelector("span").textContent = dashboardData.alerts.inspections.join(", ");
-        }
-
-        // การทำให้เมนูเปิด/ปิดเมื่อคลิกปุ่ม
-        document.getElementById("menuButton").addEventListener("click", function() {
-            const menu = document.getElementById("menu");
-            if (menu.style.display === "none" || menu.style.display === "") {
-                menu.style.display = "block";
-            } else {
-                menu.style.display = "none";
-            }
-        });
-    </script>
 </body>
 </html>

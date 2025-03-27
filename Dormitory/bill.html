@@ -6,125 +6,121 @@
     <title>ออกบิล - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* เมนู */
-        .menu {
-            display: none; /* ซ่อนเมนูเริ่มต้น */
-            position: absolute;
-            top: 50px;
-            right: 20px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            padding: 10px;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCW...",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.appspot.com",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const billsCollection = collection(db, "bill");
+
+        function fetchBills() {
+            const tableBody = document.getElementById("billTableBody");
+        
+            onSnapshot(billsCollection, (querySnapshot) => {
+                tableBody.innerHTML = "";
+                let paidCount = 0;
+                let unpaidCount = 0;
+        
+                const sortedBills = querySnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => parseInt(a.room) - parseInt(b.room));
+        
+                sortedBills.forEach((data) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${data.room}</td>
+                        <td>${data.status}</td>
+                        <td>
+                            <button onclick="viewDetails('${data.room}')">ดูรายละเอียด</button>
+                            <button onclick="deleteBill('${data.id}', this.parentNode.parentNode)">ลบ</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+        
+                    if (data.status === "ชำระแล้ว") {
+                        paidCount++;
+                    } else {
+                        unpaidCount++;
+                    }
+                });
+        
+                updateChart(paidCount, unpaidCount);
+            });
         }
 
-        .menu ul {
-            list-style: none;
-            padding: 0;
+        window.addBill = async function () {
+            const room = prompt("กรุณากรอกหมายเลขห้อง:");
+            const status = confirm("ชำระเงินแล้วหรือไม่?") ? "ชำระแล้ว" : "ยังไม่ชำระ";
+
+            if (room) {
+                await addDoc(billsCollection, { room, status });
+            }
         }
 
-        .menu ul li {
-            margin-bottom: 8px;
-        }
+        window.deleteBill = async function (id, rowElement) {
+            if (confirm("ต้องการลบรายการนี้ใช่หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "bill", id));
+                    console.log("ลบเอกสารสำเร็จ:", id);
+                    rowElement.remove();
+                    alert("ลบสำเร็จ!");
+                } catch (error) {
+                    console.error("เกิดข้อผิดพลาดในการลบ:", error);
+                    alert("เกิดข้อผิดพลาดในการลบ กรุณาลองใหม่!");
+                }
+            }
+        };
 
-        .menu ul li a {
-            text-decoration: none;
-            color: #333;
-        }
+        window.viewDetails = function (room) {
+            window.location.href = `billform.html?room=${room}`;
+        };
 
-        .menu ul li a:hover {
-            color: #007BFF;
-        }
+        function updateChart(paid, unpaid) {
+            if (window.paymentStatusChart) {
+                window.paymentStatusChart.destroy();
+            }
 
-        /* ปุ่ม */
-        button {
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-        }
-    </style>
-    <script>
-        // ฟังก์ชันแสดง/ซ่อนเมนู
-        function toggleMenu() {
-            const menu = document.getElementById('menu');
-            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
-        }
-
-        window.onload = function() {
-            var ctx1 = document.getElementById('paymentStatusChart').getContext('2d');
-            var ctx2 = document.getElementById('monthlyRevenueChart').getContext('2d');
-
-            // แผนภูมิวงกลมแสดงสถานะการชำระเงิน
-            var paymentStatusChart = new Chart(ctx1, {
+            const ctx1 = document.getElementById('paymentStatusChart').getContext('2d');
+            window.paymentStatusChart = new Chart(ctx1, {
                 type: 'pie',
                 data: {
                     labels: ['ชำระแล้ว', 'ยังไม่ชำระ'],
                     datasets: [{
-                        label: 'สถานะการชำระเงิน',
-                        data: [6, 4],  // ตัวอย่าง: 6 ห้องชำระแล้ว, 4 ห้องยังไม่ชำระ
-                        backgroundColor: ['#4CAF50', '#FF6347'],
-                        borderColor: ['#ffffff', '#ffffff'],
-                        borderWidth: 2
+                        data: [paid, unpaid],
+                        backgroundColor: ['#4CAF50', '#FF6347']
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    return tooltipItem.label + ': ' + tooltipItem.raw + ' ห้อง';
-                                }
-                            }
-                        }
-                    }
                 }
             });
+        }
 
-            // กราฟรายได้ต่อเดือน
-            var monthlyRevenueChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน'],
-                    datasets: [{
-                        label: 'รายได้ต่อเดือน',
-                        data: [40000, 35000, 45000, 40000, 42000, 46000],  // ตัวอย่างรายได้ในแต่ละเดือน
-                        backgroundColor: '#4CAF50',
-                        borderColor: '#388E3C',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false,
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    return tooltipItem.raw + ' บาท';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+        window.onload = function () {
+            fetchBills();
+        };
+
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
         };
     </script>
+    <style>
+        .menu { display: none; position: absolute; top: 50px; right: 20px; background-color: #fff; border: 1px solid #ddd; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); padding: 10px; }
+        .menu ul { list-style: none; padding: 0; }
+        .menu ul li { margin-bottom: 8px; }
+        .menu ul li a { text-decoration: none; color: #333; }
+        .menu ul li a:hover { color: #007BFF; }
+        button { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; background-color: #4CAF50; color: white; }
+    </style>
 </head>
 <body>
     <header>
@@ -133,69 +129,33 @@
             <ul>
                 <li><a href="index.html">หน้าหลัก</a></li>
                 <li><a href="login.html">เข้าสู่ระบบ</a></li>
-                <li><a href="register.html">ลงทะเบียน</a></li>
             </ul>
         </nav>
     </header>
 
     <section class="bill-section">
         <h2>ออกบิลห้องพัก</h2>
+        <button onclick="toggleMenu()">เมนู</button>
+        <button onclick="addBill()">เพิ่มบิล</button>
 
-        <!-- ตารางแสดงข้อมูลห้องพัก -->
         <table border="1" width="100%">
             <thead>
                 <tr>
                     <th>ห้อง</th>
                     <th>สถานะการชำระเงิน</th>
-                    <th>ดูรายละเอียด</th>
+                    <th>ดำเนินการ</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>ห้อง 300</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 101</td>
-                    <td>ยังไม่ชำระ</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 302</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 303</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-                <tr>
-                    <td>ห้อง 304</td>
-                    <td>ชำระแล้ว</td>
-                    <td><a href="billForm.html">ดูรายละเอียด</a></td>
-                </tr>
-            </tbody>
+            <tbody id="billTableBody"></tbody>
         </table>
 
-        <!-- แผนภูมิวงกลมสถานะการชำระเงิน -->
         <h3>แผนภูมิวงกลมสถานะการชำระเงิน</h3>
         <canvas id="paymentStatusChart" width="400" height="400"></canvas>
 
-        <!-- กราฟรายได้ต่อเดือน -->
         <h3>กราฟรายได้ต่อเดือน</h3>
         <canvas id="monthlyRevenueChart" width="400" height="400"></canvas>
-
-        <!-- รายงานรายได้ต่อเดือน -->
-        <h3>รายงานรายได้</h3>
-        <p>รายได้รวมในเดือนมีนาคม: 45,000 บาท</p> <!-- ตัวอย่างรายได้ -->
     </section>
 
-    <!-- ปุ่มสำหรับเปิดเมนู -->
-    <button onclick="toggleMenu()">เมนู</button>
-
-    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
     <div id="menu" class="menu">
         <ul>
             <li><a href="bill.html">ออกบิล</a></li>

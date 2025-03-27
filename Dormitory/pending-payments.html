@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายการรอชำระเงิน - หอพัก WS</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+    </header>
+    <button onclick="toggleMenu()">เมนู</button>
+    <div id="menu" class="menu" style="display: none;">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+    <main>
+        <h2>📜 รายการรอชำระเงิน</h2>
+        
+        <table id="paymentTable">
+            <thead>
+                <tr>
+                    <th>รหัสบิล</th>
+                    <th>ห้อง</th>
+                    <th>ชื่อผู้พัก</th>
+                    <th>รอบบิล</th>
+                    <th>สถานะ</th>
+                    <th>จำนวนเงิน</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h2>➕ เพิ่ม / แก้ไข รายการ</h2>
+        <form id="paymentForm">
+            <input type="hidden" id="recordId">
+            <label>รหัสบิล: <input type="text" id="billId" required></label>
+            <label>ห้อง: <input type="text" id="room" required></label>
+            <label>ชื่อผู้พัก: <input type="text" id="residentName" required></label>
+            <label>รอบบิล: <input type="text" id="billingCycle" required></label>
+            <label>สถานะ: 
+                <select id="status" required>
+                    <option value="ค้างชำระ">ค้างชำระ</option>
+                    <option value="ชำระแล้ว">ชำระแล้ว</option>
+                </select>
+            </label>
+            <label>จำนวนเงิน: <input type="number" id="amount" required></label>
+            <button type="submit" id="addButton">เพิ่มรายการ</button>
+            <button type="button" id="updateButton" style="display: none;">อัปเดตรายการ</button>
+        </form>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        // ตั้งค่า Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.appspot.com",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+        
+        // เริ่มต้น Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const paymentsCollection = collection(db, "pendingPayments");
+        
+        // โหลดข้อมูลจาก Firestore
+        async function fetchPayments() {
+            const tableBody = document.querySelector("#paymentTable tbody");
+            tableBody.innerHTML = "";
+            const snapshot = await getDocs(paymentsCollection);
+        
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${data.billId}</td>
+                    <td>${data.room}</td>
+                    <td>${data.residentName}</td>
+                    <td>${data.billingCycle}</td>
+                    <td>${data.status}</td>
+                    <td>${data.amount} บาท</td>
+                    <td>
+                        <button class="edit-btn" onclick="editRecord('${docSnap.id}', '${data.billId}', '${data.room}', '${data.residentName}', '${data.billingCycle}', '${data.status}', '${data.amount}')">📝 แก้ไข</button>
+                        <button class="delete-btn" onclick="deleteRecord('${docSnap.id}')">🗑 ลบ</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // เพิ่มข้อมูลใหม่
+        async function addRecord(event) {
+            event.preventDefault();
+            const billId = document.getElementById("billId").value;
+            const room = document.getElementById("room").value;
+            const residentName = document.getElementById("residentName").value;
+            const billingCycle = document.getElementById("billingCycle").value;
+            const status = document.getElementById("status").value;
+            const amount = document.getElementById("amount").value;
+        
+            await addDoc(paymentsCollection, { billId, room, residentName, billingCycle, status, amount });
+            alert("✅ เพิ่มข้อมูลสำเร็จ!");
+            resetForm();
+            await fetchPayments();  // โหลดข้อมูลใหม่ให้เห็นทันที
+        }
+        
+        // ฟังก์ชันแก้ไขข้อมูล
+        window.editRecord = function (id, billId, room, residentName, billingCycle, status, amount) {
+            document.getElementById("recordId").value = id;
+            document.getElementById("billId").value = billId;
+            document.getElementById("room").value = room;
+            document.getElementById("residentName").value = residentName;
+            document.getElementById("billingCycle").value = billingCycle;
+            document.getElementById("status").value = status;
+            document.getElementById("amount").value = amount;
+            
+            document.getElementById("updateButton").style.display = "inline-block";
+            document.getElementById("addButton").style.display = "none";
+        };
+        
+        // ฟังก์ชันอัปเดตข้อมูล
+        async function updateRecord(event) {
+            event.preventDefault();
+            const recordId = document.getElementById("recordId").value;
+        
+            if (recordId) {
+                await updateDoc(doc(db, "pendingPayments", recordId), {
+                    billId: document.getElementById("billId").value,
+                    room: document.getElementById("room").value,
+                    residentName: document.getElementById("residentName").value,
+                    billingCycle: document.getElementById("billingCycle").value,
+                    status: document.getElementById("status").value,
+                    amount: document.getElementById("amount").value
+                });
+        
+                alert("✅ อัปเดตข้อมูลสำเร็จ!");
+                resetForm();
+                await fetchPayments();  // โหลดข้อมูลใหม่
+            }
+        }
+        
+        // ฟังก์ชันลบข้อมูล
+        window.deleteRecord = async function (id) {
+            if (confirm("⚠️ คุณต้องการลบรายการนี้หรือไม่?")) {
+                await deleteDoc(doc(db, "pendingPayments", id));
+                alert("🗑 ลบข้อมูลสำเร็จ!");
+                await fetchPayments();
+            }
+        };
+        
+        // ฟังก์ชันรีเซ็ตฟอร์ม
+        function resetForm() {
+            document.getElementById("paymentForm").reset();
+            document.getElementById("recordId").value = "";
+            document.getElementById("updateButton").style.display = "none";
+            document.getElementById("addButton").style.display = "inline-block";
+        }
+        
+        // เชื่อมต่อปุ่มอัปเดตข้อมูล
+        document.getElementById("updateButton").addEventListener("click", updateRecord);
+        
+        // โหลดข้อมูลเมื่อหน้าเว็บโหลดเสร็จ
+        document.addEventListener("DOMContentLoaded", fetchPayments);
+        
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        };
+    </script>
+</body>
+</html>

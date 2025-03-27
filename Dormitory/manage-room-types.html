@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการห้องพักและประวัติการซ่อมแซม</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #d63384; padding: 8px; text-align: center; }
+        th { background-color: #d63384; color: white; }
+        .btn { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; }
+        .btn.delete { background-color: #f44336; color: white; }
+        .btn.edit { background-color: #ffa500; color: white; }
+        .btn.add { background-color: #008CBA; color: white; }
+
+        /* ปรับแต่งสไตล์สำหรับเมนู */
+        .menu {
+            display: none; /* ซ่อนเมนูเริ่มต้น */
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 200px;
+        }
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            margin: 10px 0;
+        }
+        .menu li a {
+            text-decoration: none;
+            color: #333;
+            padding: 8px;
+            display: block;
+            transition: background-color 0.3s;
+        }
+        .menu li a:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* เพิ่มการแสดงเนื้อหาของแต่ละส่วน */
+        .section {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, getDocs, where } 
+        from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ฟังก์ชันโหลดห้องพัก
+        function loadRooms() {
+            const roomTable = document.querySelector("#roomTable tbody");
+            const q = query(collection(db, "rooms"), orderBy("id", "asc"));
+
+            onSnapshot(q, (snapshot) => {
+                roomTable.innerHTML = "";
+                if (snapshot.empty) {
+                    roomTable.innerHTML = `<tr><td colspan="5">ไม่มีข้อมูลห้องพัก</td></tr>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const room = doc.data();
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${room.id}</td>
+                        <td>${room.ประเภทห้อง || "ไม่ระบุ"}</td>
+                        <td>${room.ราคาค่าเช่าต่อเดือน || "ไม่ระบุ"}</td>
+                        <td>${room.ค่ามัดจำ || "ไม่ระบุ"}</td>
+                        <td>
+                            <button class="btn edit" onclick="fillForm('${doc.id}', '${room.id}', '${room.ประเภทห้อง}', '${room.ราคาค่าเช่าต่อเดือน}', '${room.ค่ามัดจำ}')">แก้ไข</button>
+                            <button class="btn delete" onclick="deleteRoom('${doc.id}')">ลบ</button>
+                        </td>
+                    `;
+                    roomTable.appendChild(row);
+                });
+            });
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลห้องพัก
+        window.fillForm = function(docId, id, type, rent, deposit) {
+            document.getElementById("roomId").value = docId;
+            document.getElementById("roomNumber").value = id;
+            document.getElementById("roomType").value = type;
+            document.getElementById("rentPrice").value = rent.replace(" บาท", "");
+            document.getElementById("deposit").value = deposit.replace(" บาท", "");
+            loadRepairHistory(docId);  // โหลดประวัติการซ่อมแซม
+        }
+
+        // ฟังก์ชันบันทึก/แก้ไขห้องพัก
+        window.submitForm = async function() {
+            const docId = document.getElementById("roomId").value;
+            const id = document.getElementById("roomNumber").value;
+            const type = document.getElementById("roomType").value;
+            const rent = document.getElementById("rentPrice").value;
+            const deposit = document.getElementById("deposit").value;
+
+            if (!id || !type || !rent || !deposit) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+                return;
+            }
+
+            try {
+                if (docId) {
+                    await updateDoc(doc(db, "rooms", docId), {
+                        id: id,
+                        ประเภทห้อง: type,
+                        ราคาค่าเช่าต่อเดือน: rent + " บาท",
+                        ค่ามัดจำ: deposit + " บาท"
+                    });
+                    alert("อัปเดตข้อมูลสำเร็จ!");
+                } else {
+                    await addDoc(collection(db, "rooms"), {
+                        id: id,
+                        ประเภทห้อง: type,
+                        ราคาค่าเช่าต่อเดือน: rent + " บาท",
+                        ค่ามัดจำ: deposit + " บาท"
+                    });
+                    alert("เพิ่มห้องสำเร็จ!");
+                }
+                document.getElementById("roomForm").reset();
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด: " + error);
+            }
+        }
+
+        // ฟังก์ชันลบห้องพัก
+        window.deleteRoom = async function(docId) {
+            if (confirm("คุณต้องการลบห้องนี้หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "rooms", docId));
+                    alert("ลบห้องสำเร็จ!");
+                } catch (error) {
+                    alert("เกิดข้อผิดพลาด: " + error);
+                }
+            }
+        }
+
+        // ฟังก์ชันบันทึกประวัติการซ่อมแซม
+        window.submitRepairForm = async function() {
+            const roomId = document.getElementById("repairRoomId").value;
+            const repairDate = document.getElementById("repairDate").value;
+            const repairSection = document.getElementById("repairSection").value;
+            const repairDetail = document.getElementById("repairDetail").value;
+
+            if (!repairDate || !repairSection || !repairDetail) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "rooms", roomId, "repairHistory"), {
+                    date: repairDate,
+                    section: repairSection,
+                    detail: repairDetail,
+                });
+                alert("บันทึกการซ่อมแซมสำเร็จ!");
+                loadRepairHistory(roomId); // โหลดประวัติการซ่อมแซมใหม่
+                document.getElementById("repairForm").reset(); // รีเซ็ตฟอร์ม
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด: " + error);
+            }
+        }
+
+        // ฟังก์ชันโหลดประวัติการซ่อมแซม
+        window.loadRepairHistory = function(roomId) {
+            const repairHistoryTable = document.querySelector("#repairHistoryTable tbody");
+            const q = query(collection(db, "rooms", roomId, "repairHistory"));
+
+            getDocs(q).then(snapshot => {
+                repairHistoryTable.innerHTML = "";
+                if (snapshot.empty) {
+                    repairHistoryTable.innerHTML = `<tr><td colspan="3">ยังไม่มีการซ่อมแซม</td></tr>`;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const repair = doc.data();
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${repair.date}</td>
+                        <td>${repair.section}</td>
+                        <td>${repair.detail}</td>
+                    `;
+                    repairHistoryTable.appendChild(row);
+                });
+            }).catch(error => {
+                console.error("Error loading repair history:", error);
+            });
+        }
+
+        // ฟังก์ชันสำหรับการสลับการแสดงผลของส่วนต่างๆ
+        window.toggleSection = function(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // ฟังก์ชันสำหรับเปิดเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
+        }
+
+        // เรียกใช้ฟังก์ชันเพื่อโหลดห้องพักเมื่อโหลดหน้า
+        loadRooms();
+    </script>
+</head>
+<body>
+    <!-- เมนู -->
+    <div>
+        <button class="btn add" onclick="toggleSection('roomSection')">จัดการห้องพัก</button>
+        <button class="btn add" onclick="toggleSection('repairSection')">บันทึกการซ่อมแซม</button>
+        <button class="btn add" onclick="toggleSection('historySection')">ประวัติการซ่อมแซม</button>
+    </div>
+
+    <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+    <!-- ส่วนจัดการห้องพัก -->
+    <div id="roomSection" class="section active">
+        <h2>จัดการห้องพัก</h2>
+        <form id="roomForm">
+            <input type="hidden" id="roomId">
+            <table>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ประเภทห้อง</th>
+                    <th>ราคาค่าเช่า</th>
+                    <th>ค่ามัดจำ</th>
+                    <th>จัดการ</th>
+                </tr>
+                <tr>
+                    <td><input type="text" id="roomNumber" required></td>
+                    <td><input type="text" id="roomType" required></td>
+                    <td><input type="text" id="rentPrice" required></td>
+                    <td><input type="text" id="deposit" required></td>
+                    <td><button type="button" class="btn add" onclick="submitForm()">เพิ่ม/แก้ไข</button></td>
+                </tr>
+            </table>
+        </form>
+        <table id="roomTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ประเภทห้อง</th>
+                    <th>ราคาค่าเช่า</th>
+                    <th>ค่ามัดจำ</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ห้องพักจะถูกโหลดที่นี่ -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ส่วนประวัติการซ่อมแซม -->
+    <div id="repairSection" class="section">
+        <h2>บันทึกการซ่อมแซม</h2>
+        <form id="repairForm">
+            <input type="hidden" id="repairRoomId">
+            <label>วันที่ซ่อม:</label><br>
+            <input type="date" id="repairDate" required><br><br>
+            <label>ส่วนที่ซ่อม:</label><br>
+            <input type="text" id="repairSection" required><br><br>
+            <label>รายละเอียดการซ่อม:</label><br>
+            <input type="text" id="repairDetail" required><br><br>
+            <label>ระยะเวลาในการซ่อม</label><br>
+            <input type="text" id="repairDetail" required><br><br>
+            <button type="button" class="btn add" onclick="submitRepairForm()">บันทึก</button>
+        </form>
+        <h3>ประวัติการซ่อมแซม</h3>
+        <table id="repairHistoryTable">
+            <thead>
+                <tr>
+                    <th>วันที่</th>
+                    <th>ส่วนที่ซ่อม</th>
+                    <th>รายละเอียด</th>
+                    <th>ระยะเวลาในการซ่อม</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ประวัติการซ่อมแซมจะถูกโหลดที่นี่ -->
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

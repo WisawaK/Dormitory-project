@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบการทำสัญญาเช่า</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #d63384; padding: 8px; text-align: center; }
+        th { background-color: #d63384; color: white; }
+        .btn { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; }
+        .btn.delete { background-color: #f44336; color: white; }
+        .btn.add { background-color: #008CBA; color: white; }
+        
+        /* Menu styles */
+        .menu {
+            display: none;
+            background-color: #f1f1f1;
+            padding: 10px;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .menu ul li {
+            margin: 10px 0;
+        }
+        .menu ul li a {
+            text-decoration: none;
+            color: #d63384;
+        }
+        .menu-button {
+            background-color: #008CBA;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+        }
+    </style>
+    <script>
+        // ฟังก์ชันสำหรับการบันทึกข้อมูลสัญญาเช่า
+        function submitLeaseContract() {
+            const lesseeName = document.getElementById("lesseeName").value;
+            const guarantorName = document.getElementById("guarantorName").value;
+            const leaseTerm = document.getElementById("leaseTerm").value;
+            const rentRate = document.getElementById("rentRate").value;
+            const deposit = document.getElementById("deposit").value;
+            const leaseDocument = document.getElementById("leaseDocument").files[0];
+
+            if (!lesseeName || !guarantorName || !leaseTerm || !rentRate || !deposit || !leaseDocument) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน และอัปโหลดเอกสารประกอบ");
+                return;
+            }
+
+            const documentUrl = URL.createObjectURL(leaseDocument);
+
+            // สร้างข้อมูลสัญญาเช่า
+            const leaseContract = {
+                lesseeName,
+                guarantorName,
+                leaseTerm,
+                rentRate,
+                deposit,
+                documentUrl
+            };
+
+            // เก็บข้อมูลสัญญาเช่าใน localStorage
+            let leaseContracts = JSON.parse(localStorage.getItem("leaseContracts")) || [];
+            leaseContracts.push(leaseContract);
+            localStorage.setItem("leaseContracts", JSON.stringify(leaseContracts));
+
+            alert("บันทึกข้อมูลสัญญาเช่าสำเร็จ!");
+            document.getElementById("leaseContractForm").reset();
+            loadLeaseContracts();
+        }
+
+        // ฟังก์ชันสำหรับการแสดงข้อมูลสัญญาเช่าทั้งหมด
+        function loadLeaseContracts() {
+            const leaseTable = document.querySelector("#leaseTable tbody");
+            const leaseContracts = JSON.parse(localStorage.getItem("leaseContracts")) || [];
+
+            leaseTable.innerHTML = "";
+            if (leaseContracts.length === 0) {
+                leaseTable.innerHTML = `<tr><td colspan="6">ยังไม่มีข้อมูลสัญญาเช่า</td></tr>`;
+                return;
+            }
+
+            leaseContracts.forEach((lease, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${lease.lesseeName}</td>
+                    <td>${lease.guarantorName}</td>
+                    <td>${lease.leaseTerm}</td>
+                    <td>${lease.rentRate}</td>
+                    <td>${lease.deposit}</td>
+                    <td><a href="${lease.documentUrl}" target="_blank">ดูเอกสาร</a></td>
+                `;
+                leaseTable.appendChild(row);
+            });
+        }
+
+        // ฟังก์ชันสำหรับการแสดง/ซ่อนเมนู
+        function toggleMenu() {
+            const menu = document.getElementById("menu");
+            menu.style.display = (menu.style.display === "block") ? "none" : "block";
+        }
+
+        // เรียกฟังก์ชัน loadLeaseContracts ทันทีเมื่อโหลดหน้า
+        window.onload = loadLeaseContracts;
+    </script>
+</head>
+<body>
+    <h2>ระบบการทำสัญญาเช่า</h2>
+
+    <!-- ปุ่มสำหรับเปิด/ปิดเมนู -->
+    <button class="menu-button" onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+    <!-- ฟอร์มการบันทึกข้อมูลสัญญาเช่า -->
+    <div>
+        <h3>เพิ่มข้อมูลสัญญาเช่า</h3>
+        <form id="leaseContractForm">
+            <label>ชื่อผู้เช่า:</label><br>
+            <input type="text" id="lesseeName" required><br><br>
+
+            <label>ชื่อผู้ค้ำประกัน:</label><br>
+            <input type="text" id="guarantorName" required><br><br>
+
+            <label>ระยะเวลาเช่า (เดือน):</label><br>
+            <input type="number" id="leaseTerm" required><br><br>
+
+            <label>อัตราค่าเช่า (บาท/เดือน):</label><br>
+            <input type="number" id="rentRate" required><br><br>
+
+            <label>ค่ามัดจำ (บาท):</label><br>
+            <input type="number" id="deposit" required><br><br>
+
+            <label>อัปโหลดเอกสารประกอบสัญญา:</label><br>
+            <input type="file" id="leaseDocument" required><br><br>
+
+            <button type="button" class="btn add" onclick="submitLeaseContract()">บันทึกข้อมูลสัญญาเช่า</button>
+        </form>
+    </div>
+
+    <!-- ตารางแสดงข้อมูลสัญญาเช่า -->
+    <h3>ข้อมูลสัญญาเช่า</h3>
+    <table id="leaseTable">
+        <thead>
+            <tr>
+                <th>ชื่อผู้เช่า</th>
+                <th>ชื่อผู้ค้ำประกัน</th>
+                <th>ระยะเวลาเช่า</th>
+                <th>อัตราค่าเช่า</th>
+                <th>ค่ามัดจำ</th>
+                <th>เอกสารประกอบ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ข้อมูลสัญญาเช่าจะถูกโหลดที่นี่ -->
+        </tbody>
+    </table>
+</body>
+</html>

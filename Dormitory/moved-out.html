@@ -3,139 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ย้ายออกแล้ว - หอพักนักศึกษา WS</title>
+    <title>จัดการข้อมูลการย้ายออก - หอพักนักศึกษา WS</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* สไตล์สำหรับตาราง */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #d63384;
-            padding: 8px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #d63384;
-        }
-
-        /* เมนู */
-        .menu {
-            display: none; /* ซ่อนเมนูเริ่มต้น */
-            position: absolute;
-            top: 50px;
-            right: 20px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            padding: 10px;
-        }
-
-        .menu ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .menu ul li {
-            margin-bottom: 8px;
-        }
-
-        .menu ul li a {
-            text-decoration: none;
-            color: #333;
-        }
-
-        .menu ul li a:hover {
-            color: #007BFF;
-        }
-
-        /* ปุ่ม */
-        .btn {
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-        }
-    </style>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
 </head>
 <body>
     <header>
-        <h1>หอพักนักศึกษา "WS"</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">หน้าหลัก</a></li>
-                <li><a href="login.html">เข้าสู่ระบบ</a></li>
-            </ul>
-        </nav>
+        <h1>จัดการข้อมูลการย้ายออก</h1>
+        
     </header>
 
-    <section class="move-out-section">
-        <h2>ย้ายออกแล้ว</h2>
-
-        <!-- ตารางแสดงข้อมูลห้องที่ย้ายออกแล้ว -->
-        <table id="movedOutTable">
-            <thead>
-                <tr>
-                    <th>เลขห้อง</th>
-                    <th>ชื่อนามสกุลผู้ใช้</th>
-                    <th>เบอร์โทร</th>
-                    <th>วันที่ย้ายออก</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- ข้อมูลจะถูกกรองและแสดงในที่นี้ -->
-            </tbody>
-        </table>
-    </section>
-
-    <script>
-        // ข้อมูลตัวอย่างการย้ายออกแล้ว
-        const movedOutList = [
-            { room: 'ห้อง 230', name: 'นายสมพงษ์ ทองคำ', phone: '0891234567', moveOutDate: '2025-03-15' },
-            { room: 'ห้อง 306', name: 'นางสาวเวียโอเล็ต ', phone: '0892345678', moveOutDate: '2025-03-10' },
-            { room: 'ห้อง 329', name: 'นายประคำ ประปา', phone: '0893456789', moveOutDate: '2025-03-05' },
-            // เพิ่มข้อมูลได้ตามต้องการ
-        ];
-
-        // ฟังก์ชันเพื่อแสดงข้อมูลห้องที่ย้ายออกแล้ว
-        function displayMovedOutList() {
-            const tableBody = document.querySelector('#movedOutTable tbody');
-            tableBody.innerHTML = ''; // ลบข้อมูลเก่าออก
-
-            // แสดงข้อมูลในตาราง
-            movedOutList.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.room}</td>
-                    <td>${item.name}</td>
-                    <td>${item.phone}</td>
-                    <td>${item.moveOutDate}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // เรียกใช้งานฟังก์ชันเพื่อแสดงข้อมูลเมื่อโหลดหน้า
-        displayMovedOutList();
-
-        // ฟังก์ชันแสดง/ซ่อนเมนู
-        function toggleMenu() {
-            const menu = document.getElementById('menu');
-            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
-        }
-    </script>
-   
-    <!-- ปุ่มสำหรับเปิดเมนู -->
-    <button onclick="toggleMenu()">เมนู</button>
-
-    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
-    <div id="menu" class="menu">
+    <div id="menu" class="menu" style="display: none;">
         <ul>
             <li><a href="bill.html">ออกบิล</a></li>
             <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
@@ -150,5 +29,117 @@
             <li><a href="logout.html">ออกจากระบบ</a></li>
         </ul>
     </div>
+
+    <section class="checkout-management">
+        <h2>ข้อมูลการย้ายออก</h2>
+        <button onclick="toggleMenu()">เมนู</button>
+        <form id="checkoutForm">
+            <input type="hidden" id="recordId">
+            <input type="text" id="roomNumber" placeholder="เลขห้อง" required>
+            <input type="text" id="name" placeholder="ชื่อ" required>
+            <input type="text" id="phone" placeholder="เบอร์โทร" required>
+            <input type="text" id="checkoutDate" placeholder="วันที่ย้ายออก (timestamp)" required>
+            <button type="submit">เพิ่ม/แก้ไข</button>
+        </form>
+
+        <table id="checkoutTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ชื่อ</th>
+                    <th>เบอร์โทร</th>
+                    <th>วันที่ย้ายออก</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const checkoutCollection = collection(db, "checkoutRecords");
+
+        async function fetchCheckouts() {
+            const snapshot = await getDocs(checkoutCollection);
+            const tableBody = document.querySelector('#checkoutTable tbody');
+            tableBody.innerHTML = '';
+
+            snapshot.forEach(docSnap => {
+                const record = docSnap.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.roomNumber}</td>
+                    <td>${record.name}</td>
+                    <td>${record.phone}</td>
+                    <td>${record.checkoutDate}</td>
+                    <td>
+                        <button onclick="editRecord('${docSnap.id}', '${record.roomNumber}', '${record.name}', '${record.phone}', '${record.checkoutDate}')">แก้ไข</button>
+                        <button onclick="deleteRecord('${docSnap.id}')">ลบ</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        document.getElementById("checkoutForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const recordId = document.getElementById("recordId").value;
+            const roomNumber = document.getElementById("roomNumber").value;
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+            const checkoutDate = document.getElementById("checkoutDate").value;
+
+            if (recordId) {
+                await updateDoc(doc(db, "checkoutRecords", recordId), { roomNumber, name, phone, checkoutDate });
+                alert("แก้ไขข้อมูลสำเร็จ!");
+            } else {
+                await addDoc(checkoutCollection, { roomNumber, name, phone, checkoutDate });
+                alert("เพิ่มข้อมูลสำเร็จ!");
+            }
+
+            document.getElementById("checkoutForm").reset();
+            document.getElementById("recordId").value = "";
+            fetchCheckouts();
+        });
+
+        window.deleteRecord = async function(id) {
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                await deleteDoc(doc(db, "checkoutRecords", id));
+                alert("ลบข้อมูลสำเร็จ!");
+                fetchCheckouts();
+            }
+        };
+
+        window.editRecord = function(id, roomNumber, name, phone, checkoutDate) {
+            document.getElementById("recordId").value = id;
+            document.getElementById("roomNumber").value = roomNumber;
+            document.getElementById("name").value = name;
+            document.getElementById("phone").value = phone;
+            document.getElementById("checkoutDate").value = checkoutDate;
+        };
+
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        };
+
+        fetchCheckouts();
+    </script>
 </body>
 </html>

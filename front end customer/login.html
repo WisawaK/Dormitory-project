@@ -1,3 +1,4 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -24,20 +25,6 @@
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 20px;
-        }
-        .menu {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .menu button {
-            background: #fde2e4;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
         }
         .login-form {
             text-align: left;
@@ -71,12 +58,21 @@
     </style>
     <script>
         function login() {
+            var username = document.getElementById("username").value;
             var password = document.getElementById("password").value;
-            if (password === "456") {
+            
+            // รายชื่อผู้ใช้และรหัสผ่าน พร้อมหมายเลขห้องที่แตกต่างกัน
+            var users = {
+                "bryan": { "password": "1234", "room": "301" },
+                "alice": { "password": "5678", "room": "302" },
+                "charlie": { "password": "91011", "room": "303" }
+            };
+            
+            if (users[username] && users[username].password === password) {
                 alert("เข้าสู่ระบบสำเร็จ!");
-                window.location.href = "rentalpayment.html"; // เปลี่ยนเส้นทางไปยังหน้าหลังจากล็อกอิน
+                window.location.href = "rentalpayment.html?room=" + users[username].room; // ส่งหมายเลขห้องไปยัง rentalpayment.html
             } else {
-                alert("รหัสผ่านไม่ถูกต้อง");
+                alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
             }
         }
     </script>
@@ -84,15 +80,11 @@
 <body>
     <div class="container">
         <div class="header">หอพักนักศึกษา WS</div>
-        <div class="menu">
-            <button>หน้าหลัก</button>
-            <button>เข้าสู่ระบบ</button>
-        </div>
         <div class="login-form">
-            <label for="username">username</label>
+            <label for="username">Username</label>
             <input type="text" id="username" name="username">
             
-            <label for="password">password</label>
+            <label for="password">Password</label>
             <input type="password" id="password" name="password">
             
             <button class="login-btn" onclick="login()">เข้าสู่ระบบ</button>

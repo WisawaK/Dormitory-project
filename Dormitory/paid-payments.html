@@ -27,6 +27,7 @@
             <li><a href="logout.html">ออกจากระบบ</a></li>
         </ul>
     </div>
+
     <section class="payments-completed">
         <h2>รายการชำระเงินแล้ว</h2>
         <form id="paymentForm">
@@ -35,7 +36,8 @@
             <input type="text" id="residentName" placeholder="ชื่อผู้เข้าพัก" required>
             <input type="text" id="phoneNumber" placeholder="เบอร์โทร" required>
             <input type="number" id="amountPaid" placeholder="ยอดชำระ" required>
-            <input type="date" id="paymentDate" required>
+            <input type="text" id="paymentStatus" placeholder="สถานะ" required>
+
             <button type="submit">เพิ่ม/แก้ไข</button>
         </form>
 
@@ -46,7 +48,7 @@
                     <th>ชื่อผู้เข้าพัก</th>
                     <th>เบอร์โทร</th>
                     <th>ยอดชำระ</th>
-                    <th>วันสิ้นสุดสัญญา</th>
+                    <th>สถานะการชำระเงิน</th>
                     <th>จัดการ</th>
                 </tr>
             </thead>
@@ -70,7 +72,7 @@
     
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const paymentsCollection = collection(db, "paymentsCompleted");
+        const paymentsCollection = collection(db, "payments");
     
         async function fetchPaymentsRecords() {
             const snapshot = await getDocs(paymentsCollection);
@@ -82,45 +84,43 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${record.roomNumber}</td>
-                    <td>${record.residentName}</td>
+                    <td>${record.tenantName}</td>
                     <td>${record.phoneNumber}</td>
-                    <td>${record.amountPaid}</td>
-                    <td>${record.paymentDate}</td>
+                    <td>${record.amount}</td>
+                    <td>${record.paymentStatus}</td>
                     <td>
-                        <button onclick="editRecord('${docSnap.id}', '${record.roomNumber}', '${record.residentName}', '${record.phoneNumber}', '${record.amountPaid}', '${record.paymentDate}')">แก้ไข</button>
+                        <button onclick="editRecord('${docSnap.id}', '${record.roomNumber}', '${record.tenantName}', '${record.phoneNumber}', '${record.amount}', '${record.paymentStatus}')">แก้ไข</button>
                         <button onclick="deleteRecord('${docSnap.id}')">ลบ</button>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
-            
         }
     
-        window.editRecord = function (id, roomNumber, residentName, phoneNumber, amountPaid, paymentDate) {
+        window.editRecord = function (id, roomNumber, tenantName, phoneNumber, amount, paymentStatus) {
             document.getElementById("recordId").value = id;
             document.getElementById("roomNumber").value = roomNumber;
-            document.getElementById("residentName").value = residentName;
+            document.getElementById("residentName").value = tenantName;
             document.getElementById("phoneNumber").value = phoneNumber;
-            document.getElementById("amountPaid").value = amountPaid;
-            document.getElementById("paymentDate").value = paymentDate;
-        }
-        
+            document.getElementById("amountPaid").value = amount;
+            document.getElementById("paymentStatus").value = paymentStatus;
+        };
     
         document.getElementById("paymentForm").addEventListener("submit", async function(event) {
             event.preventDefault();
         
             const recordId = document.getElementById("recordId").value;
             const roomNumber = document.getElementById("roomNumber").value;
-            const residentName = document.getElementById("residentName").value;
+            const tenantName = document.getElementById("residentName").value;
             const phoneNumber = document.getElementById("phoneNumber").value;
-            const amountPaid = document.getElementById("amountPaid").value;
-            const paymentDate = document.getElementById("paymentDate").value;
+            const amount = document.getElementById("amountPaid").value;
+            const paymentStatus = document.getElementById("paymentStatus").value;
         
             if (recordId) {
-                await updateDoc(doc(db, "paymentsCompleted", recordId), { roomNumber, residentName, phoneNumber, amountPaid, paymentDate });
+                await updateDoc(doc(db, "payments", recordId), { roomNumber, tenantName, phoneNumber, amount, paymentStatus });
                 alert("แก้ไขข้อมูลสำเร็จ!");
             } else {
-                await addDoc(paymentsCollection, { roomNumber, residentName, phoneNumber, amountPaid, paymentDate });
+                await addDoc(paymentsCollection, { roomNumber, tenantName, phoneNumber, amount, paymentStatus });
                 alert("เพิ่มข้อมูลสำเร็จ!");
             }
         
@@ -128,21 +128,8 @@
             document.getElementById("recordId").value = "";
             fetchPaymentsRecords();
         });
-        
     
-        window.deleteRecord = async function(id) {
-            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
-                await deleteDoc(doc(db, "paymentsCompleted", id));
-                alert("ลบข้อมูลสำเร็จ!");
-                fetchPaymentsRecords();
-            }
-        }
-        
         fetchPaymentsRecords();
-        window.toggleMenu = function() {
-            const menu = document.getElementById("menu");
-            menu.style.display = menu.style.display === "block" ? "none" : "block";
-        };
     </script>
 </body>
 </html>

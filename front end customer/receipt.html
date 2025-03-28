@@ -3,115 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ใบแจ้งชำระเงิน</title>
+    <title>ใบเสร็จรับเงิน</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #fdebf7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            text-align: center;
             margin: 0;
+            padding: 0;
         }
-        .receipt-container {
+        .container {
             background: white;
+            width: 50%;
+            margin: 50px auto;
             padding: 20px;
             border-radius: 10px;
-            text-align: center;
-            width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        .header {
-            font-size: 20px;
-            font-weight: bold;
+        h2 {
+            color: #d63384;
+        }
+        p {
+            font-size: 18px;
+            color: #555;
         }
         .details {
             text-align: left;
             margin-top: 20px;
+            padding: 10px;
+            border-top: 2px solid #d63384;
         }
         .details p {
+            font-size: 16px;
             margin: 5px 0;
         }
-        .file-upload {
-            margin-top: 20px;
-        }
         .btn {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
+            background: #90ee90;
+            color: black;
+            padding: 10px 20px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            background: #d3d3d3;
+            border-radius: 5px;
+            margin: 10px;
         }
-        .table {
-            width: 100%;
-            margin-top: 10px;
-            border-collapse: collapse;
+        .btn:hover {
+            background: #77dd77;
         }
-        .table, .table th, .table td {
-            border: 1px solid black;
+        .back-btn {
+            background: #ffcccb;
         }
-        .table th, .table td {
-            padding: 8px;
-            text-align: center;
+        .back-btn:hover {
+            background: #ff9999;
         }
     </style>
+    <script>
+        async function updatePaymentStatus(docId) {
+            if (!docId) {
+                console.error("❌ ไม่มี docId สำหรับอัปเดต");
+                return;
+            }
+
+            const url = `https://firestore.googleapis.com/v1/projects/domitory-1a0c3-9c643/databases/(default)/documents/payments/${docId}?updateMask.fieldPaths=paymentStatus`;
+            const body = {
+                fields: {
+                    paymentStatus: { stringValue: "ชำระแล้ว" }
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (response.ok) {
+                    alert("✅ อัปเดตสถานะการชำระเงินสำเร็จ!");
+                } else {
+                    const errorData = await response.json();
+                    console.error("❌ อัปเดตล้มเหลว", errorData);
+                }
+            } catch (error) {
+                console.error("❌ เกิดข้อผิดพลาด: ", error);
+            }
+        }
+
+        function getQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                room: params.get('room') || "ไม่ทราบหมายเลขห้อง",
+                phone: params.get('phone') || "-",
+                docId: params.get('id') || null 
+            };
+        }
+
+        async function fetchPaymentDetails(roomNumber, phoneNumber) {
+            try {
+                const response = await fetch(`https://firestore.googleapis.com/v1/projects/domitory-1a0c3-9c643/databases/(default)/documents/payments`);
+                const data = await response.json();
+                const payments = data.documents || [];
+
+                const payment = payments.find(doc =>
+                    doc.fields.roomNumber.stringValue === roomNumber &&
+                    doc.fields.phoneNumber.stringValue === phoneNumber
+                );
+
+                if (payment) {
+                    document.getElementById("tenant-name").textContent = payment.fields.tenantName.stringValue;
+                    document.getElementById("room-number").textContent = payment.fields.roomNumber.stringValue;
+                    document.getElementById("total-amount").textContent = payment.fields.amount.integerValue + " บาท";
+                } else {
+                    alert("❌ ไม่พบข้อมูลการชำระเงิน");
+                }
+            } catch (error) {
+                console.error("❌ เกิดข้อผิดพลาดในการดึงข้อมูล: ", error);
+            }
+        }
+
+        window.onload = function () {
+            const { room, phone } = getQueryParams();
+            fetchPaymentDetails(room, phone);
+        };
+
+        async function goBack() {
+            const { docId } = getQueryParams();
+
+            if (docId) {
+                await updatePaymentStatus(docId);
+            } else {
+                alert("⚠️ ไม่พบ ID ของเอกสาร");
+            }
+
+            window.history.back();
+        }
+    </script>
 </head>
 <body>
-    <div class="receipt-container">
-        <p class="header">ใบแจ้งชำระเงิน</p>
-        <p>WS apartment</p>
-        <p>999 ถนนราษฎร์11 กทม</p>
+    <div class="container">
+        <h2>ใบเสร็จรับเงิน</h2>
+        <p>การชำระเงินเสร็จสมบูรณ์</p>
+        
         <div class="details">
-            <p><b>เลขที่:</b> 1</p>
-            <p><b>ชื่อผู้เช่า:</b> Bryan</p>
-            <p><b>หมายเลขห้องพัก:</b> 301</p>
-            <p><b>วันที่ออกบิล:</b> 01/05/68</p>
+            <p><strong>ชื่อผู้เช่า:</strong> <span id="tenant-name">-</span></p>
+            <p><strong>หมายเลขห้อง:</strong> <span id="room-number">-</span></p>
+            <p><strong>ค่าใช้จ่ายรวม:</strong> <span id="total-amount">-</span></p>
         </div>
-        <hr>
-        <table class="table">
-            <tr>
-                <th>รายการ</th>
-                <th>หน่วยละ</th>
-                <th>จำนวน</th>
-                <th>รวม</th>
-            </tr>
-            <tr>
-                <td>ค่าเช่า</td>
-                <td>-</td>
-                <td>1 เดือน</td>
-                <td>5,000.00</td>
-            </tr>
-            <tr>
-                <td>ยอดค้างชำระ</td>
-                <td>-</td>
-                <td>-</td>
-                <td>1,000.00</td>
-            </tr>
-            <tr>
-                <td>ค่าน้ำ</td>
-                <td>15.00</td>
-                <td>10 หน่วย</td>
-                <td>150.00</td>
-            </tr>
-            <tr>
-                <td>ค่าไฟ</td>
-                <td>5.50</td>
-                <td>100 หน่วย</td>
-                <td>550.00</td>
-            </tr>
-            <tr>
-                <td colspan="3"><b>ยอดรวมทั้งหมด</b></td>
-                <td><b>6,700.00</b></td>
-            </tr>
-        </table>
-        <hr>
-        <div class="file-upload">
-            <p>แนบหลักฐานการชำระเงิน</p>
-            <input type="file">
-        </div>
-        <button class="btn">เสร็จสิ้น</button>
+
+        <button class="btn" onclick="window.location.href='login.html'">กลับไปหน้าแรก</button>
+        <button class="btn back-btn" onclick="goBack()">ย้อนกลับ</button>
     </div>
 </body>
 </html>

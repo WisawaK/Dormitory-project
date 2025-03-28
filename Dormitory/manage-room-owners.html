@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลเจ้าของห้องพัก - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+    </header>
+
+   
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu" style="display: none;">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+    <section class="user-management">
+        <h2>จัดการข้อมูลเจ้าของห้องพัก</h2>
+      
+        <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+      
+    <!-- แบบฟอร์มเพิ่ม/แก้ไขข้อมูลผู้ใช้ -->
+        <form id="userForm" style="margin-left: 10px;">
+            <input type="hidden" id="userId">
+            <input type="text" id="userIdInput" placeholder="ID" required>
+            <input type="text" id="userName" placeholder="ชื่อ" required>
+            <input type="text" id="userUsername" placeholder="Username" required>
+            <button type="submit">เพิ่ม/แก้ไข ข้อมูลผู้ใช้</button>
+        </form>
+
+        <!-- ตารางแสดงข้อมูลผู้ใช้ -->
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ชื่อ</th>
+                    <th>Username</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลจาก Firebase จะถูกแสดงที่นี่ -->
+            </tbody>
+        </table>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userCollection = collection(db, "users");
+
+        // ดึงข้อมูลผู้ใช้จาก Firestore และแสดงในตาราง
+        async function fetchUsers() {
+            const snapshot = await getDocs(userCollection);
+            const tableBody = document.querySelector('#userTable tbody');
+            tableBody.innerHTML = '';
+
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.username}</td>
+                    <td>
+                        <button class="btn edit" onclick="editUser('${doc.id}', '${user.id}', '${user.name}', '${user.username}')">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteUser('${doc.id}')">ลบข้อมูล</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // เพิ่มหรือแก้ไขข้อมูลผู้ใช้
+        document.getElementById("userForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const userId = document.getElementById("userId").value;
+            const userIdInput = document.getElementById("userIdInput").value;
+            const userName = document.getElementById("userName").value;
+            const userUsername = document.getElementById("userUsername").value;
+
+            if (userId) {
+                // แก้ไขข้อมูลผู้ใช้
+                const userRef = doc(db, "users", userId);
+                await updateDoc(userRef, { id: userIdInput, name: userName, username: userUsername });
+                alert("แก้ไขข้อมูลผู้ใช้สำเร็จ!");
+            } else {
+                // เพิ่มข้อมูลผู้ใช้ใหม่
+                await addDoc(userCollection, { id: userIdInput, name: userName, username: userUsername });
+                alert("เพิ่มข้อมูลผู้ใช้สำเร็จ!");
+            }
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById("userForm").reset();
+            document.getElementById("userId").value = "";
+
+            // โหลดข้อมูลใหม่
+            fetchUsers();
+        });
+
+        // ฟังก์ชันลบข้อมูลผู้ใช้
+        window.deleteUser = async function (id) {
+            if (!id) {
+                console.error("User ID is missing!");
+                return;
+            }
+
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "users", id));
+                    alert("ลบข้อมูลผู้ใช้สำเร็จ!");
+                    fetchUsers(); // โหลดข้อมูลใหม่หลังลบ
+                } catch (error) {
+                    console.error("Error deleting user:", error);
+                }
+            }
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลผู้ใช้
+        window.editUser = function(id, userId, userName, userUsername) {
+            document.getElementById("userId").value = id;
+            document.getElementById("userIdInput").value = userId;
+            document.getElementById("userName").value = userName;
+            document.getElementById("userUsername").value = userUsername;
+        };
+
+        // โหลดข้อมูลผู้ใช้ครั้งแรก
+        fetchUsers();
+
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
+    </script>
+</body>
+</html>

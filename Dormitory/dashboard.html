@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Dashboard หอพักนักศึกษา "WS"</h1>
+    </header>
+     <!-- ปุ่มสำหรับเปิดเมนู -->
+     <button onclick="toggleMenu()">เมนู</button>
+    <section>
+        <h2>สรุปสถานะห้องพัก</h2>
+        <ul>
+            <li><strong>จำนวนห้องทั้งหมด: </strong><input type="number" id="totalRooms"></li>
+            <li><strong>จำนวนห้องที่มีผู้เช่า: </strong><input type="number" id="rentedRooms"></li>
+            <li><strong>จำนวนห้องว่าง: </strong><input type="number" id="vacantRooms"></li>
+            <li><strong>จำนวนห้องที่ถูกจอง: </strong><input type="number" id="reservedRooms"></li>
+            <li><strong>จำนวนห้องที่ต้องซ่อมแซม: </strong><input type="number" id="underRepairRooms"></li>
+        </ul>
+        <button id="saveData">บันทึกข้อมูล</button>
+    </section>
+
+    <section>
+        <h2>แผนภูมิแสดงสถานะห้องพัก</h2>
+        <canvas id="roomChart"></canvas>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.appspot.com",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            // ตรวจสอบว่าเมนูซ่อนหรือแสดงอยู่
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const dashboardRef = doc(db, "dashboard", "status");
+
+        let chartInstance = null;
+
+        async function fetchDashboardData() {
+            const docSnap = await getDoc(dashboardRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById("totalRooms").value = data.totalRooms || 0;
+                document.getElementById("rentedRooms").value = data.rentedRooms || 0;
+                document.getElementById("vacantRooms").value = data.vacantRooms || 0;
+                document.getElementById("reservedRooms").value = data.reservedRooms || 0;
+                document.getElementById("underRepairRooms").value = data.underRepairRooms || 0;
+
+                updateChart();
+            }
+        }
+
+        async function saveData() {
+            const updatedData = {
+                totalRooms: parseInt(document.getElementById("totalRooms").value),
+                rentedRooms: parseInt(document.getElementById("rentedRooms").value),
+                vacantRooms: parseInt(document.getElementById("vacantRooms").value),
+                reservedRooms: parseInt(document.getElementById("reservedRooms").value),
+                underRepairRooms: parseInt(document.getElementById("underRepairRooms").value),
+            };
+
+            await setDoc(dashboardRef, updatedData);
+            alert("บันทึกข้อมูลเรียบร้อย!");
+        }
+
+        function updateChart() {
+            const totalRooms = parseInt(document.getElementById("totalRooms").value);
+            const chartData = [
+                parseInt(document.getElementById("rentedRooms").value),
+                parseInt(document.getElementById("vacantRooms").value),
+                parseInt(document.getElementById("reservedRooms").value),
+                parseInt(document.getElementById("underRepairRooms").value),
+            ];
+
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = chartData;
+                chartInstance.options.scales.y.max = totalRooms;
+                chartInstance.update();
+            } else {
+                const ctx = document.getElementById("roomChart").getContext("2d");
+                chartInstance = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: ["มีผู้เช่า", "ห้องว่าง", "ถูกจอง", "ต้องซ่อมแซม"],
+                        datasets: [{
+                            label: "สถานะห้องพัก",
+                            data: chartData,
+                            backgroundColor: ["#4CAF50", "#FFC107", "#FF5722", "#9C27B0"]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: totalRooms
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.getElementById("saveData").addEventListener("click", saveData);
+
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("input", updateChart);
+        });
+
+        fetchDashboardData();
+    </script>
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu" style="display: none;">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</body>
+</html>

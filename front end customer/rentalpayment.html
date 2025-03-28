@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าชำระค่าเช่า</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdebf7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .box {
+            background: #d3d3d3;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .left-panel {
+            width: 250px;
+            text-align: center;
+        }
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            margin: auto;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-blue { background: #4a64d6; color: white; }
+        .btn-red { background: #ff6666; color: white; }
+        .btn-green { background: #a0ffaf; }
+        .right-panel {
+            width: 400px;
+        }
+        .cost-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .cost-item {
+            width: 45%;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function redirectToReceipt() {
+            window.location.href = "receipt.html";
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="box left-panel">
+            <div class="profile-pic"></div>
+            <p>ห้อง 301</p>
+            <div class="box">
+                <p>ระยะเวลาในการเช่า</p>
+                <p>01/09/67 - 01/09/68</p>
+            </div>
+            <button class="repair-btn" onclick="window.location.href='repair.html'">แจ้งซ่อมบำรุง</button>
+            <button class="btn btn-red">ออกจากระบบ</button>
+        </div>
+        <div class="box right-panel">
+            <h3>ค่าใช้จ่าย</h3>
+            <div class="cost-box">
+                <div class="cost-item">ค่าเช่าเดือนนี้<br><b>5,000.00</b></div>
+                <div class="cost-item">ยอดค้างชำระ<br><b>1,000.00</b></div>
+                <div class="cost-item">ค่าน้ำ<br><b>150.00</b></div>
+                <div class="cost-item">ค่าไฟ<br><b>550.00</b></div>
+                <div class="cost-item" style="width: 100%;">ค่าใช้จ่ายรวม<br><b>6,700.00</b></div>
+            </div>
+            <button class="btn btn-green" onclick="redirectToReceipt()">ชำระบิล</button>
+        </div>
+    </div>
+</body>
+</html>

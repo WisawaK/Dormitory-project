@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบแจ้งชำระเงิน</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdebf7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .receipt-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 400px;
+        }
+        .header {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .details {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .file-upload {
+            margin-top: 20px;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #d3d3d3;
+        }
+        .table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        .table, .table th, .table td {
+            border: 1px solid black;
+        }
+        .table th, .table td {
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <p class="header">ใบแจ้งชำระเงิน</p>
+        <p>WS apartment</p>
+        <p>999 ถนนราษฎร์11 กทม</p>
+        <div class="details">
+            <p><b>เลขที่:</b> 1</p>
+            <p><b>ชื่อผู้เช่า:</b> Bryan</p>
+            <p><b>หมายเลขห้องพัก:</b> 301</p>
+            <p><b>วันที่ออกบิล:</b> 01/05/68</p>
+        </div>
+        <hr>
+        <table class="table">
+            <tr>
+                <th>รายการ</th>
+                <th>หน่วยละ</th>
+                <th>จำนวน</th>
+                <th>รวม</th>
+            </tr>
+            <tr>
+                <td>ค่าเช่า</td>
+                <td>-</td>
+                <td>1 เดือน</td>
+                <td>5,000.00</td>
+            </tr>
+            <tr>
+                <td>ยอดค้างชำระ</td>
+                <td>-</td>
+                <td>-</td>
+                <td>1,000.00</td>
+            </tr>
+            <tr>
+                <td>ค่าน้ำ</td>
+                <td>15.00</td>
+                <td>10 หน่วย</td>
+                <td>150.00</td>
+            </tr>
+            <tr>
+                <td>ค่าไฟ</td>
+                <td>5.50</td>
+                <td>100 หน่วย</td>
+                <td>550.00</td>
+            </tr>
+            <tr>
+                <td colspan="3"><b>ยอดรวมทั้งหมด</b></td>
+                <td><b>6,700.00</b></td>
+            </tr>
+        </table>
+        <hr>
+        <div class="file-upload">
+            <p>แนบหลักฐานการชำระเงิน</p>
+            <input type="file">
+        </div>
+        <button class="btn">เสร็จสิ้น</button>
+    </div>
+</body>
+</html>

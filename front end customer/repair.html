@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งซ่อม - หอพัก WS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdebf7;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .repair-container {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        h2 {
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+        input[type="file"] {
+            width: 100%;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .submit-btn, .back-btn {
+            padding: 10px;
+            width: 48%;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .back-btn {
+            background-color: #ff6b6b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="repair-container">
+        <h2>แจ้งซ่อม</h2>
+        <label for="repair-details">รายละเอียดการซ่อม:</label>
+        <textarea id="repair-details" placeholder="โปรดระบุปัญหาที่ต้องการซ่อม..."></textarea>
+
+        <label for="repair-image">อัปโหลดรูปภาพ:</label>
+        <input type="file" id="repair-image" accept="image/*">
+
+        <div class="button-group">
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">ย้อนกลับ</button>
+            <button class="submit-btn" onclick="submitRepair()">ส่งคำร้อง</button>
+        </div>
+    </div>
+
+    <script>
+        function submitRepair() {
+            let details = document.getElementById("repair-details").value;
+            let image = document.getElementById("repair-image").files[0];
+
+            if (!details) {
+                alert("โปรดกรอกรายละเอียดการซ่อม");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("details", details);
+            if (image) {
+                formData.append("image", image);
+            }
+
+            alert("ส่งคำร้องแจ้งซ่อมเรียบร้อย!");
+            window.location.href = "dashboard.html"; // กลับไปที่หน้าหลักหลังจากแจ้งซ่อมสำเร็จ
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลเรทค่าน้ำค่าไฟ - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <section class="rate-management">
+        <h2>จัดการข้อมูลเรทค่าน้ำค่าไฟ</h2>
+        <!-- ปุ่มสำหรับเปิดเมนู -->
+        <button onclick="toggleMenu()">เมนู</button>
+
+        <!-- แบบฟอร์มเพิ่ม/แก้ไขข้อมูล (จะซ่อนเมื่อไม่ใช้) -->
+        <form id="rateForm" style="margin-left: 10px; display: none;">
+            <input type="hidden" id="rateId">
+            <input type="text" id="waterRate" placeholder="ประเภท" required>
+            <input type="text" id="price" placeholder="ราคา" required>
+            <button type="submit">เสร็จสิ้น</button>
+        </form>
+
+        <!-- ตารางแสดงข้อมูลเรทค่าน้ำค่าไฟ -->
+        <table id="rateTable">
+            <thead>
+                <tr>
+                    <th>ประเภท</th>
+                    <th>ราคา</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลจาก Firebase จะถูกแสดงที่นี่ -->
+            </tbody>
+        </table>
+    </section>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu" style="display: none;">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const rateCollection = collection(db, "rates");
+
+        // ดึงข้อมูลเรทค่าน้ำค่าไฟจาก Firestore และแสดงในตาราง
+        async function fetchRates() {
+            const snapshot = await getDocs(rateCollection);
+            const tableBody = document.querySelector('#rateTable tbody');
+            tableBody.innerHTML = '';
+
+            snapshot.forEach(doc => {
+                const rate = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rate.waterRate}</td>
+                    <td>${rate.price}</td>
+                    <td>
+                        <button class="btn edit" onclick="editRate('${doc.id}', '${rate.waterRate}', '${rate.price}')">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteRate('${doc.id}')">ลบข้อมูล</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // เพิ่มหรือแก้ไขข้อมูลเรทค่าน้ำค่าไฟ
+        document.getElementById("rateForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const rateId = document.getElementById("rateId").value;
+            const waterRate = document.getElementById("waterRate").value;
+            const price = document.getElementById("price").value;
+
+            if (rateId) {
+                // แก้ไขข้อมูล
+                const rateRef = doc(db, "rates", rateId);
+                await updateDoc(rateRef, { waterRate, price });
+                alert("แก้ไขข้อมูลสำเร็จ!");
+            } else {
+                // เพิ่มข้อมูลใหม่
+                await addDoc(rateCollection, { waterRate, price });
+                alert("เพิ่มข้อมูลเรทค่าน้ำค่าไฟสำเร็จ!");
+            }
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById("rateForm").reset();
+            document.getElementById("rateId").value = "";
+
+            // โหลดข้อมูลใหม่
+            fetchRates();
+            hideForm(); // ซ่อนฟอร์มหลังการบันทึก
+        });
+
+        // ฟังก์ชันลบข้อมูลเรทค่าน้ำค่าไฟ
+        window.deleteRate = async function (id) {
+            if (!id) {
+                console.error("Rate ID is missing!");
+                return;
+            }
+
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "rates", id));
+                    alert("ลบข้อมูลสำเร็จ!");
+                    fetchRates(); // โหลดข้อมูลใหม่หลังลบ
+                } catch (error) {
+                    console.error("Error deleting rate:", error);
+                }
+            }
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูล
+        window.editRate = function(id, waterRate, price) {
+            document.getElementById("rateId").value = id;
+            document.getElementById("waterRate").value = waterRate;
+            document.getElementById("price").value = price;
+            showForm(); // แสดงฟอร์มเมื่อเลือกแก้ไข
+        };
+
+        function showForm() {
+            const form = document.getElementById("rateForm");
+            form.style.display = "block"; 
+            setTimeout(() => { // ทำให้แสดงแบบ fade-in
+                form.style.visibility = "visible";
+                form.style.opacity = "1";
+            }, 10);
+        }
+        
+        function hideForm() {
+            const form = document.getElementById("rateForm");
+            form.style.opacity = "0";
+            form.style.visibility = "hidden";
+            setTimeout(() => { // ซ่อนหลังจาก effect fade-out จบ
+                form.style.display = "none";
+            }, 300);
+        }
+        
+        
+        
+        // โหลดข้อมูลครั้งแรก
+        fetchRates();
+
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            // ตรวจสอบว่าเมนูซ่อนหรือแสดงอยู่
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
+    </script>
+</body>
+</html>

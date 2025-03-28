@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบการทำสัญญาเช่า - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบการทำสัญญาเช่า</title>
+    <button onclick="toggleMenu()">เมนู</button>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #d63384; padding: 8px; text-align: center; }
+        th { background-color: #d63384; color: white; }
+        .btn { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; }
+        .btn.add { background-color: #008CBA; color: white; }
+        .btn.delete { background-color: #f44336; color: white; }
+        .btn.edit { background-color: #ff9800; color: white; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.appspot.com",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let editId = null; // เก็บ ID ของข้อมูลที่กำลังแก้ไข
+
+        async function submitLeaseContract() {
+            const lesseeName = document.getElementById("lesseeName").value;
+            const guarantorName = document.getElementById("guarantorName").value;
+            const leaseTerm = document.getElementById("leaseTerm").value;
+            const rentRate = document.getElementById("rentRate").value;
+            const deposit = document.getElementById("deposit").value;
+            const contractFile = document.getElementById("contractFile").value;
+
+            if (!lesseeName || !guarantorName || !leaseTerm || !rentRate || !deposit || !contractFile) {
+                alert("❌ กรุณากรอกข้อมูลให้ครบถ้วน");
+                return;
+            }
+
+            try {
+                if (editId) {
+                    // อัปเดตข้อมูลที่มีอยู่
+                    await updateDoc(doc(db, "lease_contract_system", editId), {
+                        lesseeName,
+                        guarantorName,
+                        leaseTerm: parseInt(leaseTerm),
+                        rentRate: parseFloat(rentRate),
+                        deposit: parseFloat(deposit),
+                        contractFile,
+                        timestamp: serverTimestamp()
+                    });
+                    alert("✏️ แก้ไขข้อมูลสำเร็จ!");
+                    editId = null; // รีเซ็ตค่า editId หลังแก้ไขเสร็จ
+                } else {
+                    // เพิ่มข้อมูลใหม่
+                    await addDoc(collection(db, "lease_contract_system"), {
+                        lesseeName,
+                        guarantorName,
+                        leaseTerm: parseInt(leaseTerm),
+                        rentRate: parseFloat(rentRate),
+                        deposit: parseFloat(deposit),
+                        contractFile,
+                        timestamp: serverTimestamp()
+                    });
+                    alert("✅ บันทึกข้อมูลสำเร็จ!");
+                }
+
+                document.getElementById("leaseContractForm").reset(); // ล้างค่าในฟอร์ม
+                loadLeaseContracts(); // โหลดข้อมูลใหม่
+            } catch (error) {
+                console.error("❌ เกิดข้อผิดพลาด:", error);
+                alert("❌ ไม่สามารถบันทึกข้อมูลได้");
+            }
+        }
+
+        async function loadLeaseContracts() {
+            console.log("🔄 กำลังโหลดข้อมูล...");
+            const leaseTable = document.querySelector("#leaseTable tbody");
+            leaseTable.innerHTML = "<tr><td colspan='7'>⏳ กำลังโหลดข้อมูล...</td></tr>";
+
+            const querySnapshot = await getDocs(collection(db, "lease_contract_system"));
+            leaseTable.innerHTML = "";
+
+            if (querySnapshot.empty) {
+                leaseTable.innerHTML = "<tr><td colspan='7'>📭 ยังไม่มีข้อมูล</td></tr>";
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const lease = doc.data();
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${lease.lesseeName}</td>
+                    <td>${lease.guarantorName}</td>
+                    <td>${lease.leaseTerm} เดือน</td>
+                    <td>${lease.rentRate} บาท</td>
+                    <td>${lease.deposit} บาท</td>
+                    <td>
+                        <a href="${lease.contractFile}" target="_blank">📄 เปิดเอกสาร</a>
+                    </td>
+                    <td>
+                        <button class="btn edit" onclick="editLease('${doc.id}', '${lease.lesseeName}', '${lease.guarantorName}', '${lease.leaseTerm}', '${lease.rentRate}', '${lease.deposit}', '${lease.contractFile}')">✏️ แก้ไข</button>
+                        <button class="btn delete" onclick="deleteLease('${doc.id}')">🗑 ลบ</button>
+                    </td>
+                `;
+                leaseTable.appendChild(row);
+            });
+
+            console.log("✅ โหลดข้อมูลเสร็จสิ้น!");
+        }
+
+        function editLease(id, lesseeName, guarantorName, leaseTerm, rentRate, deposit, contractFile) {
+            document.getElementById("lesseeName").value = lesseeName;
+            document.getElementById("guarantorName").value = guarantorName;
+            document.getElementById("leaseTerm").value = leaseTerm;
+            document.getElementById("rentRate").value = rentRate;
+            document.getElementById("deposit").value = deposit;
+            document.getElementById("contractFile").value = contractFile;
+            editId = id;
+        }
+
+        async function deleteLease(id) {
+            if (confirm("⚠️ คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) {
+                await deleteDoc(doc(db, "lease_contract_system", id));
+                alert("🗑 ลบข้อมูลสำเร็จ!");
+                loadLeaseContracts();
+            }
+        }
+
+        window.onload = loadLeaseContracts;
+        window.submitLeaseContract = submitLeaseContract;
+        window.editLease = editLease;
+        window.deleteLease = deleteLease;
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
+    </script>
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+</head>
+<body>
+    
+    <h2>📜 ระบบการทำสัญญาเช่า</h2>
+    <form id="leaseContractForm">
+        <label>👤 ชื่อผู้เช่า:</label><input type="text" id="lesseeName"><br><br>
+        <label>👥 ชื่อผู้ค้ำประกัน:</label><input type="text" id="guarantorName"><br><br>
+        <label>📅 ระยะเวลาเช่า:</label><input type="number" id="leaseTerm"><br><br>
+        <label>💰 ค่าเช่า:</label><input type="number" id="rentRate"><br><br>
+        <label>💵 มัดจำ:</label><input type="number" id="deposit"><br><br>
+        <label>📎 ลิงก์เอกสาร:</label>
+        <input type="text" id="contractFile"><br><br>
+        <button type="button" class="btn add" onclick="submitLeaseContract()">💾 บันทึก</button>
+    </form>
+
+    <table id="leaseTable">
+        <thead><tr><th>ชื่อผู้เช่า</th><th>ชื่อผู้ค้ำประกัน</th><th>ระยะเวลาเช่า</th><th>ค่าเช่า</th><th>มัดจำ</th><th>เอกสาร</th><th>จัดการ</th></tr></thead>
+        <tbody></tbody>
+    </table>
+</body>
+</html>

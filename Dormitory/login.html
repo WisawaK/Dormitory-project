@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- เพิ่มการใช้ไอคอนจาก FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* สไตล์เมนู */
+        .menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu li {
+            padding: 8px 0;
+        }
+
+        .menu li a {
+            text-decoration: none;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .menu li a i {
+            margin-right: 8px; /* เพิ่มระยะห่างระหว่างไอคอนกับข้อความ */
+        }
+
+        .menuButton {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .menuButton:hover {
+            background-color: #45a049;
+        }
+
+        .show {
+            display: block;
+        }
+    </style>
+
+    <script>
+        // ฟังก์ชันเปิด/ปิดเมนู
+        function toggleMenu() {
+            var menu = document.getElementById('menu');
+            menu.classList.toggle('show');
+        }
+
+        // ตรวจสอบสถานะการล็อกอินเมื่อโหลดหน้า
+        window.onload = function() {
+            var loggedIn = sessionStorage.getItem('loggedIn');
+            var menuButton = document.getElementById('menuButton');
+            var loginForm = document.getElementById('loginForm');
+
+            // ถ้าไม่ได้ล็อกอินจะให้แสดงฟอร์มล็อกอิน
+            if (loggedIn === 'true') {
+                loginForm.style.display = 'none'; // ซ่อนฟอร์มล็อกอิน
+                menuButton.style.display = 'inline-block'; // แสดงปุ่มเมนู
+            } else {
+                loginForm.style.display = 'block'; // แสดงฟอร์มล็อกอิน
+                menuButton.style.display = 'none'; // ซ่อนปุ่มเมนู
+            }
+        };
+
+        // ฟังก์ชันล็อกอิน
+        function login() {
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+
+            // ตัวอย่างการตรวจสอบล็อกอิน (ให้ใช้กับฐานข้อมูลจริง)
+            if (username === 'admin' && password === '1234') { // ตัวอย่างการตรวจสอบ
+                sessionStorage.setItem('loggedIn', 'true');
+                window.location.reload(); // โหลดหน้าใหม่หลังจากล็อกอินสำเร็จ
+            } else {
+                alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>หอพักนักศึกษา "WS"</h1>
+    </header>
+
+    <section class="login-section">
+        <h2>เข้าสู่ระบบ</h2>
+        
+        <!-- ฟอร์มล็อกอิน -->
+        <form id="loginForm" action="javascript:void(0);" onsubmit="login()">
+            <label for="username">ชื่อผู้ใช้:</label>
+            <input type="text" id="username" name="username" required><br><br>
+
+            <label for="password">รหัสผ่าน:</label>
+            <input type="password" id="password" name="password" required><br><br>
+
+            <button type="submit">เข้าสู่ระบบ</button>
+        </form>
+
+        <!-- เพิ่มปุ่มเมนู (ปุ่มนี้จะแสดงเมื่อผู้ใช้ล็อกอินแล้ว) -->
+        <button id="menuButton" class="menuButton" style="display: none;" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i> เมนู
+        </button>
+
+        <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+        <div id="menu" class="menu">
+            <ul>
+                <li><a href="bill.html"><i class="fas fa-file-invoice"></i> ออกบิล</a></li>
+                <li><a href="pending-payments.html"><i class="fas fa-clock"></i> รายการรอชำระเงิน</a></li>
+                <li><a href="paid-payments.html"><i class="fas fa-check-circle"></i> รายการชำระเงินแล้ว</a></li>
+                <li><a href="move-out-pending.html"><i class="fas fa-arrow-right"></i> รอย้ายออก</a></li>
+                <li><a href="moved-out.html"><i class="fas fa-door-open"></i> ย้ายออกแล้ว</a></li>
+                <li><a href="manage-residents.html"><i class="fas fa-users"></i> จัดการข้อมูลผู้เข้าพัก</a></li>
+                <li><a href="manage-room-owners.html"><i class="fas fa-user-tie"></i> จัดการข้อมูลเจ้าของห้องพัก</a></li>
+                <li><a href="manage-room-types.html"><i class="fas fa-bed"></i> จัดข้อมูลประเภทห้องพัก</a></li>
+                <li><a href="manage-rooms.html"><i class="fas fa-cogs"></i> จัดการห้องพัก</a></li>
+                <li><a href="manage-rates.html"><i class="fas fa-tachometer-alt"></i> จัดการเรทค่าน้ำค่าไฟ</a></li>
+                <li><a href="dashboard.html"></i>Dashboard</a></li>
+                <li><a href="logout.html" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
+            </ul>
+        </div>
+    </section>
+
+    <script>
+        // ฟังก์ชันออกจากระบบ
+        function logout() {
+            sessionStorage.removeItem('loggedIn');
+            window.location.reload(); // โหลดหน้าใหม่หลังจากออกจากระบบ
+        }
+    </script>
+</body>
+</html>

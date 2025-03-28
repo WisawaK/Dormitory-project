@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ฟอร์มออกบิลห้อง</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        
+        // ตั้งค่า Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+        
+        // เริ่มต้น Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // ดึงค่าห้องจาก URL
+        window.onload = async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomNumber = urlParams.get('room');
+        
+            if (roomNumber) {
+                document.getElementById('roomNumber').textContent = roomNumber;
+        
+                // ดึงข้อมูลล่าสุดจาก Firestore (ถ้ามี)
+                const docRef = doc(db, "billform", roomNumber);
+                const docSnap = await getDoc(docRef);
+        
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('rent').value = data.rent || '';
+                    document.getElementById('waterCurrent').value = data.waterCurrent || '';
+                    document.getElementById('waterPrevious').value = data.waterPrevious || '';
+                    document.getElementById('waterRate').value = data.waterRate || '';
+                    document.getElementById('electricityCurrent').value = data.electricityCurrent || '';
+                    document.getElementById('electricityPrevious').value = data.electricityPrevious || '';
+                    document.getElementById('electricityRate').value = data.electricityRate || '';
+                    document.getElementById('waterTotal').value = data.waterTotal || '';
+                    document.getElementById('electricityTotal').value = data.electricityTotal || '';
+                    document.getElementById('totalAmount').value = data.totalAmount || '';
+                }
+            } else {
+                alert("ไม่พบหมายเลขห้อง!");
+            }
+        };
+        
+        // คำนวณค่าใช้จ่ายและบันทึกลง Firestore
+        window.calculateTotal = async function() {
+            const room = document.getElementById('roomNumber').textContent;
+            const rent = parseFloat(document.getElementById('rent').value) || 0;
+            const waterCurrent = parseFloat(document.getElementById('waterCurrent').value) || 0;
+            const waterPrevious = parseFloat(document.getElementById('waterPrevious').value) || 0;
+            const waterRate = parseFloat(document.getElementById('waterRate').value) || 0;
+            const waterUsage = waterCurrent - waterPrevious;
+            const waterTotal = waterUsage * waterRate;
+        
+            const electricityCurrent = parseFloat(document.getElementById('electricityCurrent').value) || 0;
+            const electricityPrevious = parseFloat(document.getElementById('electricityPrevious').value) || 0;
+            const electricityRate = parseFloat(document.getElementById('electricityRate').value) || 0;
+            const electricityUsage = electricityCurrent - electricityPrevious;
+            const electricityTotal = electricityUsage * electricityRate;
+        
+            const totalAmount = rent + waterTotal + electricityTotal;
+        
+            document.getElementById('waterTotal').value = waterTotal.toFixed(2);
+            document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
+            document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+        
+            // บันทึกข้อมูลลง Firestore (อัปเดตเอกสารของแต่ละห้อง)
+            try {
+                await setDoc(doc(db, "billform", room), {
+                    room: room,
+                    rent: rent,
+                    waterCurrent: waterCurrent,
+                    waterPrevious: waterPrevious,
+                    waterRate: waterRate,
+                    waterUsage: waterUsage,
+                    waterTotal: waterTotal,
+                    electricityCurrent: electricityCurrent,
+                    electricityPrevious: electricityPrevious,
+                    electricityRate: electricityRate,
+                    electricityUsage: electricityUsage,
+                    electricityTotal: electricityTotal,
+                    totalAmount: totalAmount,
+                    timestamp: new Date()
+                });
+        
+                alert("บันทึกข้อมูลสำเร็จ!");
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาดในการบันทึก:", error);
+                alert("เกิดข้อผิดพลาด! กรุณาลองใหม่");
+            }
+        };
+        
+    </script>
+    
+    <script>
+        function goBack() {
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.href = "index.html";
+            }
+        }
+    </script>
+</head>
+<body>
+    <button onclick="goBack()" class="btn-back">ย้อนกลับ</button>
+
+    <section class="bill-section">
+        <h2>ออกบิลห้องพัก</h2>
+        <div id="billingForm">
+            <h3>กรอกรายละเอียดห้อง <span id="roomNumber"></span></h3>
+            <form onsubmit="event.preventDefault(); calculateTotal();">
+                <label>ค่าเช่า</label><input type="number" id="rent" required>
+                <h4>ค่าน้ำ</h4>
+                <label>เลขมิเตอร์น้ำครั้งนี้</label><input type="number" id="waterCurrent" required>
+                <label>เลขมิเตอร์น้ำครั้งก่อน</label><input type="number" id="waterPrevious" required>
+                <label>ราคาต่อน้ำ</label><input type="number" id="waterRate" required>
+                <label>ค่าน้ำรวม</label><input type="number" id="waterTotal" readonly>
+                <h4>ค่าไฟ</h4>
+                <label>เลขมิเตอร์ไฟครั้งนี้</label><input type="number" id="electricityCurrent" required>
+                <label>เลขมิเตอร์ไฟครั้งก่อน</label><input type="number" id="electricityPrevious" required>
+                <label>ราคาต่อไฟ</label><input type="number" id="electricityRate" required>
+                <label>ค่าไฟรวม</label><input type="number" id="electricityTotal" readonly>
+                <h4>ยอดรวม</h4>
+                <input type="number" id="totalAmount" readonly>
+                <button type="submit">บันทึก</button>
+            </form>
+        </div>
+    </section>
+</body>
+</html>

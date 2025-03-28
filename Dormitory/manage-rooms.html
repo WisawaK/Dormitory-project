@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลห้องพัก - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
+</head>
+<style>
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #d63384; padding: 8px; text-align: center; }
+    th { background-color: #d63384; color: white; }
+    .btn { padding: 5px 10px; margin: 5px; cursor: pointer; border: none; }
+    .btn.delete { background-color: #f44336; color: white; }
+    .btn.edit { background-color: #ffa500; color: white; }
+    .btn.add { background-color: #008CBA; color: white; }
+
+    /* ปรับแต่งสไตล์สำหรับเมนู */
+    .menu {
+        display: none; /* ซ่อนเมนูเริ่มต้น */
+        position: absolute;
+        top: 50px;
+        left: 10px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        width: 200px;
+    }
+    .menu ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    .menu li {
+        margin: 10px 0;
+    }
+    .menu li a {
+        text-decoration: none;
+        color: #333;
+        padding: 8px;
+        display: block;
+        transition: background-color 0.3s;
+    }
+    .menu li a:hover {
+        background-color: #f1f1f1;
+    }
+</style>
+<body>
+    <!-- ปุ่มสำหรับเปิดเมนู -->
+    <button onclick="toggleMenu()">เมนู</button>
+
+    <!-- เมนูที่แสดงเมื่อคลิกปุ่ม -->
+    <div id="menu" class="menu" style="display: none;">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+
+    <section class="room-management">
+        <h2>จัดการข้อมูลห้องพัก</h2>
+
+        <!-- แบบฟอร์มเพิ่ม/แก้ไขข้อมูลห้องพัก -->
+        <form id="roomForm" style="margin-left: 10px;">
+            <input type="hidden" id="roomId">
+            <input type="text" id="roomNumber" placeholder="เลขห้อง" required>
+            <input type="text" id="roomType" placeholder="ประเภทห้อง" required>
+            <input type="text" id="rentalStatus" placeholder="สถานะการเช่า" required>
+            <button type="submit">เพิ่ม/แก้ไข ห้องพัก</button>
+        </form>
+
+        <!-- ตารางแสดงข้อมูลห้องพัก -->
+        <table id="roomTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ประเภทห้อง</th>
+                    <th>สถานะการเช่า</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ข้อมูลจาก Firebase จะถูกแสดงที่นี่ -->
+            </tbody>
+        </table>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const roomCollection = collection(db, "dormRooms");
+
+        // ดึงข้อมูลห้องพักจาก Firestore และแสดงในตาราง
+        async function fetchRooms() {
+            const snapshot = await getDocs(roomCollection);
+            const tableBody = document.querySelector('#roomTable tbody');
+            tableBody.innerHTML = '';
+
+            snapshot.forEach(doc => {
+                const room = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${room.id}</td>
+                    <td>${room.roomType}</td>
+                    <td>${room.rentalStatus}</td>
+                    <td>
+                        <button class="btn edit" onclick="editRoom('${doc.id}', '${room.id}', '${room.roomType}', '${room.rentalStatus}')">แก้ไข</button>
+                        <button class="btn delete" onclick="deleteRoom('${doc.id}')">ลบข้อมูล</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // เพิ่มหรือแก้ไขข้อมูลห้องพัก
+        document.getElementById("roomForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const roomId = document.getElementById("roomId").value;
+            const roomNumber = document.getElementById("roomNumber").value;
+            const roomType = document.getElementById("roomType").value;
+            const rentalStatus = document.getElementById("rentalStatus").value;
+
+            if (roomId) {
+                // แก้ไขข้อมูลห้องพัก
+                const roomRef = doc(db, "dormRooms", roomId);
+                await updateDoc(roomRef, { id: roomNumber, roomType: roomType, rentalStatus: rentalStatus });
+                alert("แก้ไขข้อมูลห้องพักสำเร็จ!");
+            } else {
+                // เพิ่มข้อมูลห้องพักใหม่
+                await addDoc(roomCollection, { id: roomNumber, roomType: roomType, rentalStatus: rentalStatus });
+                alert("เพิ่มข้อมูลห้องพักสำเร็จ!");
+            }
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById("roomForm").reset();
+            document.getElementById("roomId").value = "";
+
+            // โหลดข้อมูลใหม่
+            fetchRooms();
+        });
+
+        // ฟังก์ชันลบข้อมูลห้องพัก
+        window.deleteRoom = async function (id) {
+            if (!id) {
+                console.error("Room ID is missing!");
+                return;
+            }
+
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                try {
+                    await deleteDoc(doc(db, "dormRooms", id));
+                    alert("ลบข้อมูลห้องพักสำเร็จ!");
+                    fetchRooms(); // โหลดข้อมูลใหม่หลังลบ
+                } catch (error) {
+                    console.error("Error deleting room:", error);
+                }
+            }
+        }
+
+        // ฟังก์ชันแก้ไขข้อมูลห้องพัก
+        window.editRoom = function(id, roomNumber, roomType, rentalStatus) {
+            document.getElementById("roomId").value = id;
+            document.getElementById("roomNumber").value = roomNumber;
+            document.getElementById("roomType").value = roomType;
+            document.getElementById("rentalStatus").value = rentalStatus;
+        };
+
+        // โหลดข้อมูลห้องพักครั้งแรก
+        fetchRooms();
+
+        // ฟังก์ชันสำหรับสลับการแสดงผลของเมนู
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            if (menu.style.display === "block") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "block";
+            }
+        };
+    </script>
+</body>
+</html>

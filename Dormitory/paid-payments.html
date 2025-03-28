@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายการชำระเงินแล้ว - หอพักนักศึกษา WS</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <button onclick="toggleMenu()">เมนู</button>
+    <div id="menu" class="menu" style="display: none;">
+        <ul>
+            <li><a href="bill.html">ออกบิล</a></li>
+            <li><a href="pending-payments.html">รายการรอชำระเงิน</a></li>
+            <li><a href="paid-payments.html">รายการชำระเงินแล้ว</a></li>
+            <li><a href="move-out-pending.html">รอย้ายออก</a></li>
+            <li><a href="moved-out.html">ย้ายออกแล้ว</a></li>
+            <li><a href="manage-residents.html">จัดการข้อมูลผู้เข้าพัก</a></li>
+            <li><a href="manage-room-owners.html">จัดการข้อมูลเจ้าของห้องพัก</a></li>
+            <li><a href="manage-room-types.html">จัดข้อมูลประเภทห้องพัก</a></li>
+            <li><a href="manage-rooms.html">จัดการห้องพัก</a></li>
+            <li><a href="lease_contract_system.html">ระบบการทำสัญญาเช่า</a></li>
+            <li><a href="manage-rates.html">จัดการเรทค่าน้ำค่าไฟ</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="logout.html">ออกจากระบบ</a></li>
+        </ul>
+    </div>
+    <section class="payments-completed">
+        <h2>รายการชำระเงินแล้ว</h2>
+        <form id="paymentForm">
+            <input type="hidden" id="recordId">
+            <input type="text" id="roomNumber" placeholder="เลขห้อง" required>
+            <input type="text" id="residentName" placeholder="ชื่อผู้เข้าพัก" required>
+            <input type="text" id="phoneNumber" placeholder="เบอร์โทร" required>
+            <input type="number" id="amountPaid" placeholder="ยอดชำระ" required>
+            <input type="date" id="paymentDate" required>
+            <button type="submit">เพิ่ม/แก้ไข</button>
+        </form>
+
+        <table id="paymentsTable">
+            <thead>
+                <tr>
+                    <th>เลขห้อง</th>
+                    <th>ชื่อผู้เข้าพัก</th>
+                    <th>เบอร์โทร</th>
+                    <th>ยอดชำระ</th>
+                    <th>วันสิ้นสุดสัญญา</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCWzkum4x8wj_lStJXYbLioJIgGCN8kxE",
+            authDomain: "domitory-1a0c3-9c643.firebaseapp.com",
+            projectId: "domitory-1a0c3-9c643",
+            storageBucket: "domitory-1a0c3-9c643.firebasestorage.app",
+            messagingSenderId: "1007665182785",
+            appId: "1:1007665182785:web:a72f91da9f23ac6f206ec0",
+            measurementId: "G-W36W2WEFCB"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const paymentsCollection = collection(db, "paymentsCompleted");
+    
+        async function fetchPaymentsRecords() {
+            const snapshot = await getDocs(paymentsCollection);
+            const tableBody = document.querySelector('#paymentsTable tbody');
+            tableBody.innerHTML = '';
+    
+            snapshot.forEach(docSnap => {
+                const record = docSnap.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.roomNumber}</td>
+                    <td>${record.residentName}</td>
+                    <td>${record.phoneNumber}</td>
+                    <td>${record.amountPaid}</td>
+                    <td>${record.paymentDate}</td>
+                    <td>
+                        <button onclick="editRecord('${docSnap.id}', '${record.roomNumber}', '${record.residentName}', '${record.phoneNumber}', '${record.amountPaid}', '${record.paymentDate}')">แก้ไข</button>
+                        <button onclick="deleteRecord('${docSnap.id}')">ลบ</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+        }
+    
+        window.editRecord = function (id, roomNumber, residentName, phoneNumber, amountPaid, paymentDate) {
+            document.getElementById("recordId").value = id;
+            document.getElementById("roomNumber").value = roomNumber;
+            document.getElementById("residentName").value = residentName;
+            document.getElementById("phoneNumber").value = phoneNumber;
+            document.getElementById("amountPaid").value = amountPaid;
+            document.getElementById("paymentDate").value = paymentDate;
+        }
+        
+    
+        document.getElementById("paymentForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+        
+            const recordId = document.getElementById("recordId").value;
+            const roomNumber = document.getElementById("roomNumber").value;
+            const residentName = document.getElementById("residentName").value;
+            const phoneNumber = document.getElementById("phoneNumber").value;
+            const amountPaid = document.getElementById("amountPaid").value;
+            const paymentDate = document.getElementById("paymentDate").value;
+        
+            if (recordId) {
+                await updateDoc(doc(db, "paymentsCompleted", recordId), { roomNumber, residentName, phoneNumber, amountPaid, paymentDate });
+                alert("แก้ไขข้อมูลสำเร็จ!");
+            } else {
+                await addDoc(paymentsCollection, { roomNumber, residentName, phoneNumber, amountPaid, paymentDate });
+                alert("เพิ่มข้อมูลสำเร็จ!");
+            }
+        
+            document.getElementById("paymentForm").reset();
+            document.getElementById("recordId").value = "";
+            fetchPaymentsRecords();
+        });
+        
+    
+        window.deleteRecord = async function(id) {
+            if (confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) {
+                await deleteDoc(doc(db, "paymentsCompleted", id));
+                alert("ลบข้อมูลสำเร็จ!");
+                fetchPaymentsRecords();
+            }
+        }
+        
+        fetchPaymentsRecords();
+        window.toggleMenu = function() {
+            const menu = document.getElementById("menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        };
+    </script>
+</body>
+</html>
